@@ -1,0 +1,364 @@
+# =====================================================
+# JAVA MICROSERVICE CI/CD PIPELINE TEMPLATE
+# =====================================================
+# Individual CI/CD pipeline for Java microservices
+# Replaces GitLab CI for Java services
+# =====================================================
+
+name: Java Microservice Pipeline
+
+on:
+  push:
+    branches: [main, develop, staging]
+    paths:
+      - 'domains/**/backend/java/**'
+      - 'shared/backend/java/**'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'domains/**/backend/java/**'
+      - 'shared/backend/java/**'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      service_name:
+        description: 'Service name'
+        required: true
+        type: string
+
+env:
+  JAVA_VERSION: '17'
+  MAVEN_OPTS: '-Xmx2048m'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # ========================================
+  # BUILD & TEST
+  # ========================================
+  build-and-test:
+    name: Build and Test Java Service
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Detect Java Service
+        id: detect-service
+        run: |
+          # Find changed Java services
+          SERVICES=$(git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | grep -E "domains/[^/]+/[^/]+/backend/java/[^/]+" | cut -d'/' -f4 | sort -u | tr '\n' ',' | sed 's/,$//')
+
+          if [ -z "$SERVICES" ]; then
+            SERVICES=$(find domains -name "pom.xml" -path "*/backend/java/*" | cut -d'/' -f4 | sort -u | tr '\n' ',' | sed 's/,$//')
+          fi
+
+          echo "services=$SERVICES" >> $GITHUB_OUTPUT
+          echo "Detected Java services: $SERVICES"
+
+      - name: Cache Maven dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: Run Unit Tests
+        run: |
+          IFS=',' read -ra SERVICES_ARRAY <<< "${{ steps.detect-service.outputs.services }}"
+          for service in "${SERVICES_ARRAY[@]}"; do
+            if [ -n "$service" ] && [ -d "domains/*/backend/java/$service" ]; then
+              echo "Testing service: $service"
+              cd domains/*/backend/java/$service
+
+              # Run unit tests
+              mvn clean test
+
+              # Generate test reports
+              mvn jacoco:report
+
+              # Check test coverage
+              mvn jacoco:check
+
+              cd -
+            fi
+          done
+
+      - name: Run Integration Tests
+        run: |
+          IFS=',' read -ra SERVICES_ARRAY <<< "${{ steps.detect-service.outputs.services }}"
+          for service in "${SERVICES_ARRAY[@]}"; do
+            if [ -n "$service" ] && [ -d "domains/*/backend/java/$service" ]; then
+              echo "Running integration tests for: $service"
+              cd domains/*/backend/java/$service
+
+              # Start test containers
+              docker-compose -f docker-compose.test.yml up -d
+              sleep 30
+
+              # Run integration tests
+              mvn verify -P integration-tests
+
+              # Cleanup test containers
+              docker-compose -f docker-compose.test.yml down
+
+              cd -
+            fi
+          done
+
+      - name: Build Application
+        run: |
+          IFS=',' read -ra SERVICES_ARRAY <<< "${{ steps.detect-service.outputs.services }}"
+          for service in "${SERVICES_ARRAY[@]}"; do
+            if [ -n "$service" ] && [ -d "domains/*/backend/java/$service" ]; then
+              echo "Building service: $service"
+              cd domains/*/backend/java/$service
+
+              # Build JAR
+              mvn clean package -DskipTests
+
+              # Verify build
+              ls -la target/*.jar
+
+              cd -
+            fi
+          done
+
+      - name: Security Scan
+        uses: securecodewarrior/github-action-add-sarif@v1
+        with:
+          sarif-file: 'security-scan-results.sarif'
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  # ========================================
+  # DOCKER BUILD & PUSH
+  # ========================================
+  docker-build:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
+
+    strategy:
+      matrix:
+        service: ${{ fromJson(steps.detect-service.outputs.services) }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.service }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: domains/*/backend/java/${{ matrix.service }}
+          file: domains/*/backend/java/${{ matrix.service }}/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ========================================
+  # DEPLOYMENT
+  # ========================================
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: docker-build
+    if: github.ref == 'refs/heads/develop' || github.event.inputs.environment == 'staging'
+    environment: staging
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Update Kubeconfig
+        run: aws eks update-kubeconfig --name ${{ secrets.EKS_CLUSTER_NAME_STAGING }}
+
+      - name: Deploy to Kubernetes Staging
+        run: |
+          IFS=',' read -ra SERVICES_ARRAY <<< "${{ steps.detect-service.outputs.services }}"
+          for service in "${SERVICES_ARRAY[@]}"; do
+            if [ -n "$service" ]; then
+              echo "Deploying service: $service to staging"
+
+              # Apply namespace
+              kubectl apply -f shared/ci-cd/kubernetes/namespaces/staging-namespace.yml
+
+              # Deploy service
+              kubectl apply -f shared/ci-cd/kubernetes/foundation/$service/staging/
+
+              # Wait for rollout
+              kubectl rollout status deployment/${service}-staging --namespace=staging --timeout=300s
+
+              echo "Service $service deployed successfully to staging"
+            fi
+          done
+
+      - name: Health Check
+        run: |
+          IFS=',' read -ra SERVICES_ARRAY <<< "${{ steps.detect-service.outputs.services }}"
+          for service in "${SERVICES_ARRAY[@]}"; do
+            if [ -n "$service" ]; then
+              echo "Checking health for: $service"
+
+              # Wait for pod to be ready
+              kubectl wait --for=condition=ready pod -l app=${service} --namespace=staging --timeout=300s
+
+              # Check service health endpoint
+              SERVICE_URL=$(kubectl get svc ${service}-staging --namespace=staging -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+              curl -f http://${SERVICE_URL}/actuator/health || exit 1
+
+              echo "Health check passed for: $service"
+            fi
+          done
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [docker-build, deploy-staging]
+    if: github.ref == 'refs/heads/main' || github.event.inputs.environment == 'production'
+    environment: production
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Update Kubeconfig
+        run: aws eks update-kubeconfig --name ${{ secrets.EKS_CLUSTER_NAME_PRODUCTION }}
+
+      - name: Blue-Green Deployment
+        run: |
+          IFS=',' read -ra SERVICES_ARRAY <<< "${{ steps.detect-service.outputs.services }}"
+          for service in "${SERVICES_ARRAY[@]}"; do
+            if [ -n "$service" ]; then
+              echo "Performing blue-green deployment for: $service"
+
+              # Deploy to green environment
+              kubectl apply -f shared/ci-cd/kubernetes/foundation/$service/production/green/
+
+              # Wait for green deployment
+              kubectl rollout status deployment/${service}-green --namespace=production --timeout=600s
+
+              # Switch traffic to green
+              kubectl patch service ${service} -p '{"spec":{"selector":{"version":"green"}}}'
+
+              # Health check
+              sleep 30
+              SERVICE_URL=$(kubectl get svc ${service} --namespace=production -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+              curl -f http://${SERVICE_URL}/actuator/health || exit 1
+
+              echo "Blue-green deployment completed for: $service"
+            fi
+          done
+
+      - name: Cleanup Blue Environment
+        run: |
+          IFS=',' read -ra SERVICES_ARRAY <<< "${{ steps.detect-service.outputs.services }}"
+          for service in "${SERVICES_ARRAY[@]}"; do
+            if [ -n "$service" ]; then
+              echo "Cleaning up blue environment for: $service"
+              kubectl delete deployment ${service}-blue --namespace=production --ignore-not-found=true
+            fi
+          done
+
+  # ========================================
+  # NOTIFICATION
+  # ========================================
+  notify:
+    name: Deployment Notification
+    runs-on: ubuntu-latest
+    needs: [deploy-staging, deploy-production]
+    if: always()
+
+    steps:
+      - name: Prepare Notification
+        id: notification
+        run: |
+          if [[ "${{ needs.deploy-staging.result }}" == "success" || "${{ needs.deploy-production.result }}" == "success" ]]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo "message=✅ Java microservice deployment completed successfully!" >> $GITHUB_OUTPUT
+          else
+            echo "status=failure" >> $GITHUB_OUTPUT
+            echo "message=❌ Java microservice deployment failed!" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Slack Notification
+        if: env.status == 'success'
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ steps.notification.outputs.status }}
+          channel: '#deployments'
+          text: ${{ steps.notification.outputs.message }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+# =====================================================
+# MICROSERVICE CONFIGURATION
+# =====================================================
+# Each Java microservice should have:
+# 1. pom.xml (Maven configuration)
+# 2. Dockerfile (Container build)
+# 3. docker-compose.test.yml (Test environment)
+# 4. Kubernetes manifests in shared/ci-cd/kubernetes/
+# 5. Individual environment variables
+# 6. Health check endpoints (/actuator/health)
+# 7. Metrics endpoints (/actuator/prometheus)
+# =====================================================

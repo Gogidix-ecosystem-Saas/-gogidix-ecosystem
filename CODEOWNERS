@@ -1,0 +1,123 @@
+# Global CODEOWNERS - All files require codeowner approval
+* @Gogidix-ecosystem-Saas/codeowners
+
+# Domain-specific ownership with team-based access control
+
+# Foundation Domain - Dev-ops team has primary ownership
+domains/foundation/ @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+domains/foundation/ai-services/ @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+domains/foundation/central-configuration/ @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+domains/foundation/centralized-dashboard/ @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+domains/foundation/shared-infrastructure/ @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+domains/foundation/shared-libraries/ @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+
+# Management Domain - Management team has primary ownership
+domains/management/ @Gogidix-ecosystem-Saas/management @Gogidix-ecosystem-Saas/codeowners
+domains/management/executive/ @Gogidix-ecosystem-Saas/management @Gogidix-ecosystem-Saas/codeowners
+domains/management/hr/ @Gogidix-ecosystem-Saas/management @Gogidix-ecosystem-Saas/codeowners
+domains/management/finance/ @Gogidix-ecosystem-Saas/management @Gogidix-ecosystem-Saas/codeowners
+domains/management/operations/ @Gogidix-ecosystem-Saas/management @Gogidix-ecosystem-Saas/codeowners
+
+# Business Domain - Business team has primary ownership
+domains/business/ @Gogidix-ecosystem-Saas/business @Gogidix-ecosystem-Saas/codeowners
+domains/business/social-commerce/ @Gogidix-ecosystem-Saas/business @Gogidix-ecosystem-Saas/codeowners
+domains/business/warehousing/ @Gogidix-ecosystem-Saas/business @Gogidix-ecosystem-Saas/codeowners
+domains/business/courier-services/ @Gogidix-ecosystem-Saas/business @Gogidix-ecosystem-Saas/codeowners
+domains/business/haulage-logistics/ @Gogidix-ecosystem-Saas/business @Gogidix-ecosystem-Saas/codeowners
+domains/business/air-freight-ocean-shipping/ @Gogidix-ecosystem-Saas/business @Gogidix-ecosystem-Saas/codeowners
+
+# Backend services - Technology-specific ownership
+domains/*/backend/ @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+
+# Frontend applications - Technology-specific ownership
+domains/*/frontend/ @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+
+# Mobile applications - Technology-specific ownership
+domains/*/mobile/ @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+
+# Infrastructure and DevOps - Dev-ops team primary ownership
+infrastructure/ @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+infrastructure/docker/ @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+infrastructure/kubernetes/ @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+infrastructure/terraform/ @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+infrastructure/monitoring/ @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+infrastructure/security/ @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+
+# CI/CD Pipelines - Dev-ops team ownership
+.github/workflows/ @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+.github/actions/ @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+
+# Shared resources - Dev-ops team ownership
+shared/ @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+shared/testing/ @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+shared/ci-cd/ @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+shared/infrastructure/ @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+shared/backend/ @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+
+# Configuration files - Dev-ops team ownership
+configs/ @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+configs/environments/ @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+configs/secrets/ @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+
+# Documentation - All teams can contribute, codeowners approve
+docs/ @Gogidix-ecosystem-Saas/codeowners
+docs/api/ @Gogidix-ecosystem-Saas/codeowners
+docs/architecture/ @Gogidix-ecosystem-Saas/codeowners
+docs/deployment/ @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+
+# Build and configuration files - Dev-ops team ownership
+pom.xml @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+package.json @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+Dockerfile @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+docker-compose.yml @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+
+# Maven and build configurations - Dev-ops team ownership
+**/pom.xml @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+**/maven.config @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+**/settings.xml @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+
+# Exclude Gradle files (Maven-only policy)
+**/*.gradle @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+**/gradle/ @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+**/build.gradle* @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+
+# Node.js configurations - Dev-ops team ownership
+**/package.json @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+**/package-lock.json @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+**/yarn.lock @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+**/tsconfig.json @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+
+# Kubernetes configurations - Dev-ops team ownership
+**/*.yml @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+**/*.yaml @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+
+# Terraform configurations - Dev-ops team ownership
+**/*.tf @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+**/*.tfvars @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+**/terraform.tfstate* @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+
+# Environment files - Dev-ops team ownership
+.env* @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+**/.env* @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+
+# Properties files - Domain team + Dev-ops ownership
+**/*.properties @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+domains/foundation/**/*.properties @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+domains/management/**/*.properties @Gogidix-ecosystem-Saas/management @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+domains/business/**/*.properties @Gogidix-ecosystem-Saas/business @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+
+# Readme files - All teams can contribute
+README.md @Gogidix-ecosystem-Saas/codeowners
+**/README.md @Gogidix-ecosystem-Saas/codeowners
+
+# License and legal files - Codeowners only
+LICENSE @Gogidix-ecosystem-Saas/codeowners
+**/LICENSE* @Gogidix-ecosystem-Saas/codeowners
+
+# Security files - Dev-ops team ownership
+SECURITY.md @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+**/security/ @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+
+# Emergency and rollback files - Dev-ops + codeowners
+**/*ROLLBACK* @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners
+**/*emergency* @Gogidix-ecosystem-Saas/dev-ops @Gogidix-ecosystem-Saas/codeowners

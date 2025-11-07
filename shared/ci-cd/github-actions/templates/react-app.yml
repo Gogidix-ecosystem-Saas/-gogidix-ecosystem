@@ -1,0 +1,518 @@
+# =====================================================
+# REACT APPLICATION CI/CD PIPELINE TEMPLATE
+# =====================================================
+# Individual CI/CD pipeline for React frontend applications
+# Replaces GitLab CI for React services
+# =====================================================
+
+name: React App Pipeline
+
+on:
+  push:
+    branches: [main, develop, staging]
+    paths:
+      - 'domains/**/frontend/react/**'
+      - 'shared/frontend/react/**'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'domains/**/frontend/react/**'
+      - 'shared/frontend/react/**'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      app_name:
+        description: 'React app name'
+        required: true
+        type: string
+
+env:
+  NODE_VERSION: '18'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # ========================================
+  # BUILD & TEST
+  # ========================================
+  build-and-test:
+    name: Build and Test React App
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: |
+            domains/**/frontend/react/**/package-lock.json
+            shared/frontend/react/**/package-lock.json
+
+      - name: Detect React Apps
+        id: detect-apps
+        run: |
+          # Find changed React apps
+          APPS=$(git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | grep -E "domains/[^/]+/[^/]+/frontend/react/[^/]+" | cut -d'/' -f4 | sort -u | tr '\n' ',' | sed 's/,$//')
+
+          if [ -z "$APPS" ]; then
+            APPS=$(find domains -name "package.json" -path "*/frontend/react/*" | cut -d'/' -f4 | sort -u | tr '\n' ',' | sed 's/,$//')
+          fi
+
+          echo "apps=$APPS" >> $GITHUB_OUTPUT
+          echo "Detected React apps: $APPS"
+
+      - name: Install Dependencies
+        run: |
+          IFS=',' read -ra APPS_ARRAY <<< "${{ steps.detect-apps.outputs.apps }}"
+          for app in "${APPS_ARRAY[@]}"; do
+            if [ -n "$app" ] && [ -d "domains/*/frontend/react/$app" ]; then
+              echo "Installing dependencies for: $app"
+              cd domains/*/frontend/react/$app
+              npm ci
+              cd -
+            fi
+          done
+
+      - name: Run Linting
+        run: |
+          IFS=',' read -ra APPS_ARRAY <<< "${{ steps.detect-apps.outputs.apps }}"
+          for app in "${APPS_ARRAY[@]}"; do
+            if [ -n "$app" ] && [ -d "domains/*/frontend/react/$app" ]; then
+              echo "Linting app: $app"
+              cd domains/*/frontend/react/$app
+              npm run lint || echo "Linting issues found for $app"
+              cd -
+            fi
+          done
+
+      - name: Run Type Checking
+        run: |
+          IFS=',' read -ra APPS_ARRAY <<< "${{ steps.detect-apps.outputs.apps }}"
+          for app in "${APPS_ARRAY[@]}"; do
+            if [ -n "$app" ] && [ -d "domains/*/frontend/react/$app" ]; then
+              echo "Type checking app: $app"
+              cd domains/*/frontend/react/$app
+              npm run type-check || echo "Type checking issues found for $app"
+              cd -
+            fi
+          done
+
+      - name: Run Unit Tests
+        run: |
+          IFS=',' read -ra APPS_ARRAY <<< "${{ steps.detect-apps.outputs.apps }}"
+          for app in "${APPS_ARRAY[@]}"; do
+            if [ -n "$app" ] && [ -d "domains/*/frontend/react/$app" ]; then
+              echo "Running tests for: $app"
+              cd domains/*/frontend/react/$app
+
+              # Run tests with coverage
+              npm run test:coverage
+
+              # Generate test reports
+              npm run test:report
+
+              cd -
+            fi
+          done
+
+      - name: Build Applications
+        run: |
+          IFS=',' read -ra APPS_ARRAY <<< "${{ steps.detect-apps.outputs.apps }}"
+          for app in "${APPS_ARRAY[@]}"; do
+            if [ -n "$app" ] && [ -d "domains/*/frontend/react/$app" ]; then
+              echo "Building app: $app"
+              cd domains/*/frontend/react/$app
+
+              # Build for production
+              npm run build
+
+              # Verify build output
+              ls -la build/
+
+              cd -
+            fi
+          done
+
+      - name: Security Audit
+        run: |
+          IFS=',' read -ra APPS_ARRAY <<< "${{ steps.detect-apps.outputs.apps }}"
+          for app in "${APPS_ARRAY[@]}"; do
+            if [ -n "$app" ] && [ -d "domains/*/frontend/react/$app" ]; then
+              echo "Security audit for: $app"
+              cd domains/*/frontend/react/$app
+              npm audit --audit-level high || echo "Security vulnerabilities found in $app"
+              cd -
+            fi
+          done
+
+      - name: Bundle Size Analysis
+        run: |
+          IFS=',' read -ra APPS_ARRAY <<< "${{ steps.detect-apps.outputs.apps }}"
+          for app in "${APPS_ARRAY[@]}"; do
+            if [ -n "$app" ] && [ -d "domains/*/frontend/react/$app" ]; then
+              echo "Bundle size analysis for: $app"
+              cd domains/*/frontend/react/$app
+
+              # Install bundle analyzer
+              npm install --save-dev webpack-bundle-analyzer
+
+              # Analyze bundle size
+              npm run analyze || echo "Bundle analysis completed for $app"
+
+              cd -
+            fi
+          done
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: test-results-react
+          path: |
+            domains/**/frontend/react/**/coverage/
+            domains/**/frontend/react/**/test-results/
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-artifacts-react
+          path: domains/**/frontend/react/**/build/
+
+  # ========================================
+  # E2E TESTING
+  # ========================================
+  e2e-testing:
+    name: End-to-End Testing
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: build-artifacts-react
+          path: domains/
+
+      - name: Start Test Environment
+        run: |
+          # Start infrastructure services
+          docker-compose -f infrastructure/docker/docker-compose.infrastructure.yml up -d
+          sleep 60
+
+          # Start application for E2E testing
+          IFS=',' read -ra APPS_ARRAY <<< "${{ steps.detect-apps.outputs.apps }}"
+          for app in "${APPS_ARRAY[@]}"; do
+            if [ -n "$app" ] && [ -d "domains/*/frontend/react/$app/build" ]; then
+              echo "Starting E2E test server for: $app"
+              cd domains/*/frontend/react/$app/build
+              python3 -m http.server 3000 &
+              cd -
+            fi
+          done
+
+      - name: Run E2E Tests
+        run: |
+          IFS=',' read -ra APPS_ARRAY <<< "${{ steps.detect-apps.outputs.apps }}"
+          for app in "${APPS_ARRAY[@]}"; do
+            if [ -n "$app" ] && [ -d "domains/*/frontend/react/$app" ]; then
+              echo "Running E2E tests for: $app"
+              cd domains/*/frontend/react/$app
+
+              # Install E2E dependencies
+              npm ci
+              npx playwright install
+
+              # Run E2E tests
+              npm run test:e2e
+
+              cd -
+            fi
+          done
+
+      - name: Upload E2E Test Results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: e2e-test-results
+          path: domains/**/frontend/react/**/e2e-results/
+
+      - name: Cleanup Test Environment
+        run: |
+          docker-compose -f infrastructure/docker/docker-compose.infrastructure.yml down
+
+  # ========================================
+  # DOCKER BUILD & PUSH
+  # ========================================
+  docker-build:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    needs: [build-and-test, e2e-testing]
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
+
+    strategy:
+      matrix:
+        app: ${{ fromJson(steps.detect-apps.outputs.apps) }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: build-artifacts-react
+          path: domains/
+
+      - name: Extract Metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.app }}-frontend
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: domains/*/frontend/react/${{ matrix.app }}/build
+          file: shared/ci-cd/docker/frontend-dockerfiles/react-nginx.Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ========================================
+  # DEPLOYMENT
+  # ========================================
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: docker-build
+    if: github.ref == 'refs/heads/develop' || github.event.inputs.environment == 'staging'
+    environment: staging
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Update Kubeconfig
+        run: aws eks update-kubeconfig --name ${{ secrets.EKS_CLUSTER_NAME_STAGING }}
+
+      - name: Deploy to Kubernetes Staging
+        run: |
+          IFS=',' read -ra APPS_ARRAY <<< "${{ steps.detect-apps.outputs.apps }}"
+          for app in "${APPS_ARRAY[@]}"; do
+            if [ -n "$app" ]; then
+              echo "Deploying React app: $app to staging"
+
+              # Apply namespace
+              kubectl apply -f shared/ci-cd/kubernetes/namespaces/staging-namespace.yml
+
+              # Deploy frontend app
+              kubectl apply -f shared/ci-cd/kubernetes/foundation/$app/staging/frontend/
+
+              # Wait for rollout
+              kubectl rollout status deployment/${app}-frontend-staging --namespace=staging --timeout=300s
+
+              echo "React app $app deployed successfully to staging"
+            fi
+          done
+
+      - name: Health Check
+        run: |
+          IFS=',' read -ra APPS_ARRAY <<< "${{ steps.detect-apps.outputs.apps }}"
+          for app in "${APPS_ARRAY[@]}"; do
+            if [ -n "$app" ]; then
+              echo "Checking health for: $app"
+
+              # Wait for pod to be ready
+              kubectl wait --for=condition=ready pod -l app=${app}-frontend --namespace=staging --timeout=300s
+
+              # Check service health endpoint
+              SERVICE_URL=$(kubectl get svc ${app}-frontend-staging --namespace=staging -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+              curl -f http://${SERVICE_URL} || exit 1
+
+              echo "Health check passed for: $app"
+            fi
+          done
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [docker-build, deploy-staging]
+    if: github.ref == 'refs/heads/main' || github.event.inputs.environment == 'production'
+    environment: production
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Update Kubeconfig
+        run: aws eks update-kubeconfig --name ${{ secrets.EKS_CLUSTER_NAME_PRODUCTION }}
+
+      - name: Deploy to Production
+        run: |
+          IFS=',' read -ra APPS_ARRAY <<< "${{ steps.detect-apps.outputs.apps }}"
+          for app in "${APPS_ARRAY[@]}"; do
+            if [ -n "$app" ]; then
+              echo "Deploying React app: $app to production"
+
+              # Deploy to production with rolling update
+              kubectl apply -f shared/ci-cd/kubernetes/foundation/$app/production/frontend/
+
+              # Wait for rollout
+              kubectl rollout status deployment/${app}-frontend --namespace=production --timeout=600s
+
+              echo "React app $app deployed successfully to production"
+            fi
+          done
+
+      - name: Health Check
+        run: |
+          IFS=',' read -ra APPS_ARRAY <<< "${{ steps.detect-apps.outputs.apps }}"
+          for app in "${APPS_ARRAY[@]}"; do
+            if [ -n "$app" ]; then
+              echo "Checking health for: $app"
+
+              # Wait for pod to be ready
+              kubectl wait --for=condition=ready pod -l app=${app}-frontend --namespace=production --timeout=300s
+
+              # Check service health endpoint
+              SERVICE_URL=$(kubectl get svc ${app}-frontend --namespace=production -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+              curl -f http://${SERVICE_URL} || exit 1
+
+              echo "Health check passed for: $app"
+            fi
+          done
+
+  # ========================================
+  # PERFORMANCE TESTING
+  # ========================================
+  performance-testing:
+    name: Performance Testing
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Run Lighthouse CI
+        run: |
+          IFS=',' read -ra APPS_ARRAY <<< "${{ steps.detect-apps.outputs.apps }}"
+          for app in "${APPS_ARRAY[@]}"; do
+            if [ -n "$app" ]; then
+              echo "Running Lighthouse CI for: $app"
+
+              # Get staging URL
+              SERVICE_URL=$(kubectl get svc ${app}-frontend-staging --namespace=staging -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+              URL="http://${SERVICE_URL}"
+
+              # Run Lighthouse CI
+              npm install -g @lhci/cli@0.12.x
+              lhci autorun --config=.lighthouserc.js --url=$URL
+
+              echo "Lighthouse CI completed for: $app"
+            fi
+          done
+
+      - name: Upload Performance Reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: lighthouse-reports
+          path: .lighthouseci/
+
+  # ========================================
+  # NOTIFICATION
+  # ========================================
+  notify:
+    name: Deployment Notification
+    runs-on: ubuntu-latest
+    needs: [deploy-staging, deploy-production, performance-testing]
+    if: always()
+
+    steps:
+      - name: Prepare Notification
+        id: notification
+        run: |
+          if [[ "${{ needs.deploy-staging.result }}" == "success" || "${{ needs.deploy-production.result }}" == "success" ]]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo "message=✅ React app deployment completed successfully!" >> $GITHUB_OUTPUT
+          else
+            echo "status=failure" >> $GITHUB_OUTPUT
+            echo "message=❌ React app deployment failed!" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Slack Notification
+        if: env.status == 'success'
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ steps.notification.outputs.status }}
+          channel: '#frontend-deployments'
+          text: ${{ steps.notification.outputs.message }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+# =====================================================
+# REACT APP CONFIGURATION
+# =====================================================
+# Each React app should have:
+# 1. package.json with proper scripts
+# 2. .env files for environment configuration
+# 3. Dockerfile for containerization
+# 4. nginx.conf for production serving
+# 5. .lighthouserc.js for performance testing
+# 6. Kubernetes manifests in shared/ci-cd/kubernetes/
+# =====================================================

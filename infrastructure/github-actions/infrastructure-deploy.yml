@@ -1,0 +1,494 @@
+# =====================================================
+# GOGIDIX ECOSYSTEM - INFRASTRUCTURE DEPLOYMENT WORKFLOW
+# =====================================================
+# GitHub Actions workflow for deploying infrastructure
+# Replaces GitLab CI/CD infrastructure deployment
+# =====================================================
+
+name: Infrastructure Deployment
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'infrastructure/**'
+      - '.github/workflows/infrastructure-deploy.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'infrastructure/**'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      infrastructure_component:
+        description: 'Infrastructure component to deploy'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - aws-infrastructure
+          - kubernetes
+          - monitoring
+          - databases
+
+env:
+  AWS_REGION: us-west-2
+  EKS_CLUSTER_NAME: gogidix-eks-cluster
+  ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-west-2.amazonaws.com
+
+jobs:
+  # ========================================
+  # VALIDATION & SECURITY SCANS
+  # ========================================
+  validate-infrastructure:
+    name: Validate Infrastructure Code
+    runs-on: ubuntu-latest
+    outputs:
+      terraform-changed: ${{ steps.changes.outputs.terraform }}
+      kubernetes-changed: ${{ steps.changes.outputs.kubernetes }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect Infrastructure Changes
+        uses: dorny/paths-filter@v2
+        id: changes
+        with:
+          filters: |
+            terraform:
+              - 'infrastructure/terraform/**'
+            kubernetes:
+              - 'infrastructure/kubernetes/**'
+            docker:
+              - 'infrastructure/docker/**'
+
+      - name: Setup Terraform
+        if: steps.changes.outputs.terraform == 'true'
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ~1.5
+
+      - name: Terraform Format Check
+        if: steps.changes.outputs.terraform == 'true'
+        run: |
+          cd infrastructure/terraform
+          terraform fmt -check -recursive
+
+      - name: Terraform Validation
+        if: steps.changes.outputs.terraform == 'true'
+        run: |
+          cd infrastructure/terraform
+          find . -type f -name "*.tf" -exec dirname {} \; | sort -u | while read dir; do
+            echo "Validating $dir"
+            terraform validate "$dir"
+          done
+
+      - name: Kubernetes Manifest Validation
+        if: steps.changes.outputs.kotlin == 'true'
+        run: |
+          cd infrastructure/kubernetes
+          find . -name "*.yaml" -o -name "*.yml" | xargs -I {} kubeval {}
+
+      - name: Security Scan with Trivy
+        if: steps.changes.outputs.docker == 'true'
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'config'
+          scan-ref: 'infrastructure/'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy Scan Results
+        if: steps.changes.outputs.docker == 'true'
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # ========================================
+  # AWS INFRASTRUCTURE DEPLOYMENT
+  # ========================================
+  deploy-aws-infrastructure:
+    name: Deploy AWS Infrastructure
+    runs-on: ubuntu-latest
+    needs: validate-infrastructure
+    if: needs.validate-infrastructure.outputs.terraform-changed == 'true'
+    environment: ${{ github.event.inputs.environment || 'staging' }}
+
+    strategy:
+      matrix:
+        component: [vpc, eks, rds, ecr, monitoring]
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ~1.5
+          terraform_wrapper: false
+
+      - name: Initialize Terraform
+        run: |
+          cd infrastructure/terraform/${{ matrix.component }}
+          terraform init \
+            -backend-config="bucket=gogidix-terraform-state" \
+            -backend-config="key=${{ matrix.component }}.tfstate" \
+            -backend-config="region=${{ env.AWS_REGION }}"
+
+      - name: Plan Terraform
+        id: plan
+        run: |
+          cd infrastructure/terraform/${{ matrix.component }}
+          terraform plan \
+            -var="environment=${{ github.event.inputs.environment || 'staging' }}" \
+            -var="aws_region=${{ env.AWS_REGION }}" \
+            -var="eks_cluster_name=${{ env.EKS_CLUSTER_NAME }}" \
+            -out=tfplan
+
+      - name: Terraform Plan Summary
+        run: |
+          cd infrastructure/terraform/${{ matrix.component }}
+          terraform show -json tfplan | jq -r '
+            (.resource_changes[]? | select(.change.actions[] != "no-op") | {
+              resource: .address,
+              action: .change.actions | join(", "),
+              type: .type
+            })
+          '
+
+      - name: Apply Terraform
+        if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+        run: |
+          cd infrastructure/terraform/${{ matrix.component }}
+          terraform apply -auto-approve tfplan
+
+      - name: Generate Terraform Output
+        if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+        run: |
+          cd infrastructure/terraform/${{ matrix.component }}
+          terraform output -json > outputs.json
+          echo "Terraform outputs for ${{ matrix.component }}:"
+          cat outputs.json
+
+  # ========================================
+  # KUBERNETES DEPLOYMENT
+  # ========================================
+  deploy-kubernetes:
+    name: Deploy Kubernetes Resources
+    runs-on: ubuntu-latest
+    needs: [validate-infrastructure, deploy-aws-infrastructure]
+    if: always() && needs.validate-infrastructure.outputs.kubernetes-changed == 'true'
+    environment: ${{ github.event.inputs.environment || 'staging' }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Update Kubeconfig
+        run: |
+          aws eks update-kubeconfig \
+            --region ${{ env.AWS_REGION }} \
+            --name ${{ env.EKS_CLUSTER_NAME }}
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'v1.28.0'
+
+      - name: Deploy Namespaces
+        run: |
+          kubectl apply -f infrastructure/kubernetes/namespaces/
+          kubectl wait --for=condition=complete job/kubernetes-namespace-setup --timeout=300s -n kube-system
+
+      - name: Deploy ConfigMaps and Secrets
+        run: |
+          kubectl apply -f infrastructure/kubernetes/configmaps/
+          kubectl apply -f infrastructure/kubernetes/secrets/
+
+      - name: Deploy Storage Classes
+        run: |
+          kubectl apply -f infrastructure/kubernetes/storage/
+          kubectl apply -f infrastructure/kubernetes/persistent-volumes/
+
+      - name: Deploy Monitoring Stack
+        if: contains(github.event.inputs.infrastructure_component, 'monitoring') || github.event.inputs.infrastructure_component == 'all'
+        run: |
+          kubectl apply -f infrastructure/kubernetes/monitoring/
+          kubectl rollout status deployment/prometheus-server --namespace=monitoring --timeout=300s
+          kubectl rollout status deployment/grafana --namespace=monitoring --timeout=300s
+
+      - name: Deploy Logging Stack
+        run: |
+          kubectl apply -f infrastructure/kubernetes/logging/
+          kubectl rollout status deployment/elasticsearch-master --namespace=logging --timeout=300s
+
+      - name: Deploy Ingress Controller
+        run: |
+          kubectl apply -f infrastructure/kubernetes/ingress/
+          kubectl rollout status deployment/nginx-ingress-controller --namespace=ingress-nginx --timeout=300s
+
+      - name: Verify Deployment
+        run: |
+          echo "=== Cluster Info ==="
+          kubectl cluster-info
+
+          echo "=== Node Status ==="
+          kubectl get nodes -o wide
+
+          echo "=== Namespace Status ==="
+          kubectl get namespaces
+
+          echo "=== Pod Status ==="
+          kubectl get pods --all-namespaces
+
+          echo "=== Service Status ==="
+          kubectl get services --all-namespaces
+
+          echo "=== Ingress Status ==="
+          kubectl get ingress --all-namespaces
+
+  # ========================================
+  # DATABASE SETUP AND MIGRATION
+  # ========================================
+  setup-databases:
+    name: Setup Databases
+    runs-on: ubuntu-latest
+    needs: [deploy-aws-infrastructure, deploy-kubernetes]
+    if: always() && (needs.deploy-aws-infrastructure.result == 'success' || needs.deploy-aws-infrastructure.result == 'skipped')
+    environment: ${{ github.event.inputs.environment || 'staging' }}
+
+    strategy:
+      matrix:
+        database: [postgresql, mongodb, redis, elasticsearch]
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Database Tools
+        run: |
+          # PostgreSQL Client
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+          # MongoDB Client
+          wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc | sudo apt-key add -
+          echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/6.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list
+          sudo apt-get update
+          sudo apt-get install -y mongodb-org-shell
+
+          # Redis CLI
+          sudo apt-get install -y redis-tools
+
+          # Elasticsearch Tools
+          curl -fsSL https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -
+          echo "deb https://artifacts.elastic.co/packages/8.x/apt stable main" | sudo tee /etc/apt/sources.list.d/elastic-8.x.list
+          sudo apt-get update
+          sudo apt-get install -y elasticsearch
+
+      - name: Run Database Setup Scripts
+        run: |
+          cd infrastructure/database-setup/
+
+          case "${{ matrix.database }}" in
+            postgresql)
+              chmod +x scripts/setup-postgres.sh
+              ./scripts/setup-postgres.sh ${{ github.event.inputs.environment || 'staging' }}
+              ;;
+            mongodb)
+              chmod +x scripts/setup-mongodb.sh
+              ./scripts/setup-mongodb.sh ${{ github.event.inputs.environment || 'staging' }}
+              ;;
+            redis)
+              chmod +x scripts/setup-redis.sh
+              ./scripts/setup-redis.sh ${{ github.event.inputs.environment || 'staging' }}
+              ;;
+            elasticsearch)
+              chmod +x scripts/setup-elasticsearch.sh
+              ./scripts/setup-elasticsearch.sh ${{ github.event.inputs.environment || 'staging' }}
+              ;;
+          esac
+
+      - name: Run Database Migrations
+        run: |
+          cd infrastructure/database-migrations/
+          chmod +x scripts/run-migrations.sh
+          ./scripts/run-migrations.sh ${{ matrix.database }} ${{ github.event.inputs.environment || 'staging' }}
+
+  # ========================================
+  # MONITORING AND HEALTH CHECKS
+  # ========================================
+  health-checks:
+    name: Health Checks and Monitoring
+    runs-on: ubuntu-latest
+    needs: [setup-databases, deploy-kubernetes]
+    if: always() && needs.setup-databases.result == 'success'
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Update Kubeconfig
+        run: |
+          aws eks update-kubeconfig \
+            --region ${{ env.AWS_REGION }} \
+            --name ${{ env.EKS_CLUSTER_NAME }}
+
+      - name: Run Health Checks
+        run: |
+          cd infrastructure/monitoring/
+          chmod +x scripts/health-check.sh
+          ./scripts/health-check.sh ${{ github.event.inputs.environment || 'staging' }}
+
+      - name: Test Database Connections
+        run: |
+          cd infrastructure/monitoring/
+          chmod +x scripts/test-databases.sh
+          ./scripts/test-databases.sh ${{ github.event.inputs.environment || 'staging' }}
+
+      - name: Generate Monitoring Dashboard
+        run: |
+          cd infrastructure/monitoring/
+          chmod +x scripts/generate-dashboard.sh
+          ./scripts/generate-dashboard.sh ${{ github.event.inputs.environment || 'staging' }}
+
+      - name: Upload Monitoring Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: monitoring-report-${{ github.event.inputs.environment || 'staging' }}
+          path: infrastructure/monitoring/reports/
+
+  # ========================================
+  # NOTIFICATIONS AND CLEANUP
+  # ========================================
+  notify-deployment:
+    name: Deployment Notification
+    runs-on: ubuntu-latest
+    needs: [health-checks]
+    if: always()
+
+    steps:
+      - name: Prepare Notification
+        id: notification
+        run: |
+          if [ "${{ needs.health-checks.result }}" == "success" ]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo "message=✅ Infrastructure deployment completed successfully!" >> $GITHUB_OUTPUT
+          else
+            echo "status=failure" >> $GITHUB_OUTPUT
+            echo "message=❌ Infrastructure deployment failed or has issues!" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Slack Notification
+        if: env.status == 'success'
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ steps.notification.outputs.status }}
+          channel: '#deployments'
+          text: ${{ steps.notification.outputs.message }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Create GitHub Issue on Failure
+        if: env.status == 'failure'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: 'Infrastructure Deployment Failed',
+              body: `## Infrastructure Deployment Failure
+
+              **Environment:** ${{ github.event.inputs.environment || 'staging' }}
+              **Commit:** ${{ github.sha }}
+              **Workflow Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+              **Failure Details:**
+              - Component: ${{ github.event.inputs.infrastructure_component || 'all' }}
+              - Timestamp: ${{ github.event.head_commit.timestamp }}
+
+              **Next Steps:**
+              1. Check the workflow logs for detailed error messages
+              2. Review the infrastructure changes in this PR/commit
+              3. Verify AWS credentials and permissions
+              4. Check resource limits and quotas
+              5. Validate Terraform state consistency
+
+              **Debugging Commands:**
+              \`\`\`bash
+              # Check Terraform state
+              terraform state list
+
+              # Validate AWS resources
+              aws eks describe-cluster --name ${{ env.EKS_CLUSTER_NAME }}
+              aws rds describe-db-instances
+              \`\`\`
+              `,
+              labels: ['bug', 'infrastructure', 'urgent']
+            })
+
+      - name: Cleanup Workspace
+        if: always()
+        run: |
+          echo "Cleaning up workspace..."
+          rm -rf ~/.aws/credentials
+          echo "Workspace cleanup completed."
+
+# ========================================
+# WORKFLOW SUMMARY
+# ========================================
+# This workflow replaces GitLab CI/CD infrastructure deployment with:
+# 1. Infrastructure validation and security scanning
+# 2. AWS infrastructure deployment via Terraform
+# 3. Kubernetes resource deployment
+# 4. Database setup and migration
+# 5. Health checks and monitoring
+# 6. Notifications and failure handling
+#
+# Environment variables needed in GitHub repository:
+# - AWS_ACCESS_KEY_ID
+# - AWS_SECRET_ACCESS_KEY
+# - SLACK_WEBHOOK_URL
+# - AWS_ACCOUNT_ID
+# ========================================
