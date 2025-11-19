@@ -1,17 +1,10 @@
 package com.gogidix.centralconfiguration.configserver.application.service;
 
-import
-    com.gogidix.centralconfiguration.configserver.domain.model.ConfigurationQuery;
-import
-    com.gogidix.centralconfiguration.configserver.domain.model.ConfigurationResult
-    ;
-import
-    com.gogidix.centralconfiguration.configserver.domain.model.ConfigurationData;
-import
-    com.gogidix.centralconfiguration.configserver.domain.port.ConfigurationPort;
-import
-    com.gogidix.centralconfiguration.configserver.domain.port.ConfigurationService
-    Port;
+import com.gogidix.centralconfiguration.configserver.domain.model.ConfigurationQuery;
+import com.gogidix.centralconfiguration.configserver.domain.model.ConfigurationResult;
+import com.gogidix.centralconfiguration.configserver.domain.model.ConfigurationData;
+import com.gogidix.centralconfiguration.configserver.domain.port.ConfigurationPort;
+import com.gogidix.centralconfiguration.configserver.domain.port.ConfigurationServicePort;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -23,8 +16,8 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- Application Service for Configuration management.
- Implements business logic for configuration operations.
+ * Application Service for Configuration management.
+ * Implements business logic for configuration operations.
  */
 @Service
 public class ConfigurationService implements ConfigurationServicePort {
@@ -39,27 +32,25 @@ public class ConfigurationService implements ConfigurationServicePort {
     private String applicationName;
 
     /**
-     Get configuration for an application and profile.
+     * Get configuration for an application and profile.
      */
     @Override
     public ConfigurationResult getConfiguration(String application, String profile) {
         Optional<ConfigurationData> configDataOpt = configurationPort.findByApplicationAndProfile(application, profile);
         ConfigurationData configData = configDataOpt.orElse(null);
-
+        
         Map<String, Object> properties;
         if (configData != null) {
-    {
+        
             properties = configData.getProperties();
-    }
         } else {
             // Default configuration
             properties = new HashMap<>();
             properties.put("server.port", "8080");
             properties.put("spring.application.name", application);
-            properties.put(
-        "management.endpoints.web.exposure.include", "health,info");
+            properties.put("management.endpoints.web.exposure.include", "health,info");
         }
-
+        
         return new ConfigurationResult(
             application,
             profile,
@@ -71,15 +62,15 @@ public class ConfigurationService implements ConfigurationServicePort {
     }
 
     /**
-     Get configuration using domain query.
+     * Get configuration using domain query.
      */
     @Override
     public ConfigurationResult getConfiguration(ConfigurationQuery query) {
         return getConfiguration(query.getApplication(), query.getProfile());
     }
-
+    
     /**
-     Get server information.
+     * Get server information.
      */
     @Override
     public ConfigurationResult getServerInfo() {
@@ -87,9 +78,8 @@ public class ConfigurationService implements ConfigurationServicePort {
         serverProps.put("server.name", applicationName);
         serverProps.put("server.port", serverPort);
         serverProps.put("server.version", "1.0.0");
-        serverProps.put(
-        "spring.cloud.config.server.git.uri", "file://config-repo");
-
+        serverProps.put("spring.cloud.config.server.git.uri", "file://config-repo");
+        
         return new ConfigurationResult(
             applicationName,
             "server",
@@ -101,49 +91,47 @@ public class ConfigurationService implements ConfigurationServicePort {
     }
 
     /**
-     Refresh configuration cache.
+     * Refresh configuration cache.
      */
     @Override
     public void refreshConfiguration() {
         configurationPort.clearCache();
     }
-
+    
     /**
-     Get all applications.
+     * Get all applications.
      */
     @Override
     public List<String> getAllApplications() {
         return configurationPort.getAllApplications();
     }
-
+    
     /**
-     Get profiles for an application.
+     * Get profiles for an application.
      */
     @Override
     public List<String> getProfilesForApplication(String application) {
         return configurationPort.getProfilesForApplication(application);
     }
-
+    
     /**
-     Update configuration.
+     * Update configuration.
      */
     @Override
-    public void updateConfiguration(
-        String application, String profile, ConfigurationData
-        configurationData) {
+    public void updateConfiguration(String application, String profile, ConfigurationData configurationData) {
         configurationPort.save(configurationData);
     }
-
+    
     /**
-     Delete configuration.
+     * Delete configuration.
      */
     @Override
     public void deleteConfiguration(String application, String profile) {
         configurationPort.delete(application, profile);
     }
-
+    
     /**
-     Check if configuration exists.
+     * Check if configuration exists.
      */
     @Override
     public boolean configurationExists(String application, String profile) {

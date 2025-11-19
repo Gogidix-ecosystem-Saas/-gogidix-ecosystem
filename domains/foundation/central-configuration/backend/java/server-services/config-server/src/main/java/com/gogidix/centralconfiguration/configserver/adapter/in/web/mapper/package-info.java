@@ -1,8 +1,7 @@
 /**
- com.gogidix.centralconfiguration.configserver.adapter.in.web.mapper package.
+ * com.gogidix.centralconfiguration.configserver.adapter.in.web.mapper package.
  *
- * <p>This package contains components for the
-com.gogidix.centralconfiguration.configserver.adapter.in.web.mapper module
+ * <p>This package contains components for the com.gogidix.centralconfiguration.configserver.adapter.in.web.mapper module
  * within the Gogidix ecosystem.</p>
  *
  * @since 1.0.0

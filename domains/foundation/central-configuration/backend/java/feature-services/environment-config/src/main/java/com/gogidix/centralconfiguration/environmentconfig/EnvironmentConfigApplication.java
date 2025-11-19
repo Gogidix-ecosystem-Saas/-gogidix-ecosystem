@@ -20,14 +20,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @since 2024-01-01
  */
 @SpringBootApplication
-@SuppressWarnings("HideUtilityClassConstructor")
-public final class EnvironmentConfigApplication {
+public class EnvironmentConfigApplication {
 
-    /**
-     Main method for the application.
-     *
-     * @param args command line arguments
-     */
     public static void main(final String[] args) {
         SpringApplication.run(EnvironmentConfigApplication.class, args);
     }

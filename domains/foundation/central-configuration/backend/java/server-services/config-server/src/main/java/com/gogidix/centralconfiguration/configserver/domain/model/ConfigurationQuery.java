@@ -4,11 +4,11 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- Domain model for Configuration Query.
- Pure domain representation without external dependencies.
+ * Domain model for Configuration Query.
+ * Pure domain representation without external dependencies.
  */
-public final class ConfigurationQuery {
-
+public class ConfigurationQuery {
+    
     private final String application;
     private final String profile;
     private final String label;
@@ -16,9 +16,8 @@ public final class ConfigurationQuery {
     private final Map<String, Object> additionalProperties;
 
     // Constructor
-    public ConfigurationQuery(String application, String profile, String label,
-                             boolean includeDefaults, Map<String, Object>
-additionalProperties) {
+    public ConfigurationQuery(String application, String profile, String label, 
+                             boolean includeDefaults, Map<String, Object> additionalProperties) {
         this.application = application;
         this.profile = profile;
         this.label = label != null ? label : "master";
@@ -28,9 +27,9 @@ additionalProperties) {
 
     // Business logic methods
     public boolean isValidQuery() {
-        return application != null  && && \&&&& \
-            !application.trim().isEmpty()  && && \&&&& \
-               profile != null  && && \&&&& \
+        return application != null &&
+            !application.trim().isEmpty() &&
+               profile != null &&
             !profile.trim().isEmpty();
     }
 
@@ -60,25 +59,17 @@ additionalProperties) {
     }
 
     @Override
-    /**
-     * {@inheritDoc}
-     Implementation of equals method for comparison.
-     * This implementation follows the contract of the equals method
-     and is consistent with the hashCode implementation.
-     */
+    
     public boolean equals(final Object o) {
         if (this == o) {
-    {
+        
         return true;
     }
-    }
         if (o == null || getClass() != o.getClass()) return false;
-    {
         ConfigurationQuery that = (ConfigurationQuery) o;
-    }
-        return includeDefaults == that.includeDefaults  && && \&&&& \
-               Objects.equals(application, that.application)  && && \&&&& \
-               Objects.equals(profile, that.profile)  && && \&&&& \
+        return includeDefaults == that.includeDefaults &&
+               Objects.equals(application, that.application) &&
+               Objects.equals(profile, that.profile) &&
                Objects.equals(label, that.label);
     }
 

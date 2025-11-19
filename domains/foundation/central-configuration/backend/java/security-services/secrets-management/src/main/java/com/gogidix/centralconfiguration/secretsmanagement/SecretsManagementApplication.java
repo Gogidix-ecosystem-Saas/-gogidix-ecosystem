@@ -11,14 +11,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @since 2024-01-01
  */
 @SpringBootApplication
-@SuppressWarnings("HideUtilityClassConstructor")
-public final class SecretsManagementApplication {
+public class SecretsManagementApplication {
 
-    /**
-     Main method for the application.
-     *
-     * @param args command line arguments
-     */
     public static void main(final String[] args) {
         SpringApplication.run(SecretsManagementApplication.class, args);
     }

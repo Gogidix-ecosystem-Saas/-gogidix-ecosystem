@@ -3,25 +3,23 @@ package com.gogidix.centralconfiguration.databasemigrations.domain.model;
 import java.util.Objects;
 
 /**
- Domain model for Migration Query.
- Pure domain representation for database-migrations requests.
+ * Domain model for Migration Query.
+ * Pure domain representation for database-migrations requests.
  */
-public final class MigrationQuery {
-
+public class MigrationQuery {
+    
     private final String identifier;
     private final String environment;
     private final boolean includeMetadata;
 
-    public MigrationQuery(
-        String identifier, String environment, boolean
-        includeMetadata) {
+    public MigrationQuery(String identifier, String environment, boolean includeMetadata) {
         this.identifier = identifier;
         this.environment = environment;
         this.includeMetadata = includeMetadata;
     }
 
     public boolean isValidQuery() {
-        return identifier != null  && && \&&&& \
+        return identifier != null &&
             !identifier.trim().isEmpty();
     }
 
@@ -31,24 +29,16 @@ public final class MigrationQuery {
     public boolean isIncludeMetadata() { return includeMetadata; }
 
     @Override
-    /**
-     * {@inheritDoc}
-     Implementation of equals method for comparison.
-     * This implementation follows the contract of the equals method
-     and is consistent with the hashCode implementation.
-     */
+    
     public boolean equals(final Object o) {
         if (this == o) {
-    {
+        
         return true;
     }
-    }
         if (o == null || getClass() != o.getClass()) return false;
-    {
         MigrationQuery that = (MigrationQuery) o;
-    }
-        return includeMetadata == that.includeMetadata  && && \&&&& \
-               Objects.equals(identifier, that.identifier)  && && \&&&& \
+        return includeMetadata == that.includeMetadata &&
+               Objects.equals(identifier, that.identifier) &&
                Objects.equals(environment, that.environment);
     }
 

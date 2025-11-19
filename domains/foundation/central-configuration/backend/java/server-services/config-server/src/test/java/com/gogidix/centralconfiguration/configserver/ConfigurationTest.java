@@ -18,7 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
     }
 )
 @ActiveProfiles("test")
-public final class ConfigurationTest {
+public class ConfigurationTest {
 
     @Value("${spring.application.name}")
     private String applicationName;

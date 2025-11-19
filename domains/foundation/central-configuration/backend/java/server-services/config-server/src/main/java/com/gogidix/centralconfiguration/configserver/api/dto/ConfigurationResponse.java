@@ -4,11 +4,11 @@ import java.time.LocalDateTime;
 import java.util.Map;
 
 /**
- Response DTO for configuration data.
- Contains configuration properties and metadata.
+ * Response DTO for configuration data.
+ * Contains configuration properties and metadata.
  */
-public final class ConfigurationResponse {
-
+public class ConfigurationResponse {
+    
     private String application;
     private String profile;
     private String label;
@@ -23,9 +23,7 @@ public final class ConfigurationResponse {
     }
 
     // Constructor with essential fields
-    public ConfigurationResponse(
-        String application, String profile, Map<String, Object>
-        properties) {
+    public ConfigurationResponse(String application, String profile, Map<String, Object> properties) {
         this.application = application;
         this.profile = profile;
         this.properties = properties;

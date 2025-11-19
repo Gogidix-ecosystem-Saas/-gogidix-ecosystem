@@ -5,11 +5,11 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- Domain model for Environment Result.
- Pure domain representation of environment configuration response.
+ * Domain model for Environment Result.
+ * Pure domain representation of environment configuration response.
  */
-public final class EnvironmentResult {
-
+public class EnvironmentResult {
+    
     private final String environment;
     private final String application;
     private final String region;
@@ -17,10 +17,8 @@ public final class EnvironmentResult {
     private final LocalDateTime timestamp;
     private final boolean hasSecrets;
 
-    public EnvironmentResult(
-        String environment, String application, String region,
-                           Map<String, Object> configurations, boolean
-hasSecrets) {
+    public EnvironmentResult(String environment, String application, String region, 
+                           Map<String, Object> configurations, boolean hasSecrets) {
         this.environment = environment;
         this.application = application;
         this.region = region;
@@ -30,7 +28,7 @@ hasSecrets) {
     }
 
     public boolean hasConfigurations() {
-        return configurations != null  && && \&&&& \
+        return configurations != null &&
             !configurations.isEmpty();
     }
 
@@ -47,24 +45,16 @@ hasSecrets) {
     public boolean isHasSecrets() { return hasSecrets; }
 
     @Override
-    /**
-     * {@inheritDoc}
-     Implementation of equals method for comparison.
-     * This implementation follows the contract of the equals method
-     and is consistent with the hashCode implementation.
-     */
+    
     public boolean equals(final Object o) {
         if (this == o) {
-    {
+        
         return true;
     }
-    }
         if (o == null || getClass() != o.getClass()) return false;
-    {
         EnvironmentResult that = (EnvironmentResult) o;
-    }
-        return Objects.equals(environment, that.environment)  && && \&&&& \
-               Objects.equals(application, that.application)  && && \&&&& \
+        return Objects.equals(environment, that.environment) &&
+               Objects.equals(application, that.application) &&
                Objects.equals(region, that.region);
     }
 

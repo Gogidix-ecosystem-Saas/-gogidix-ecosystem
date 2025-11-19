@@ -1,8 +1,7 @@
 /**
- com.gogidix.centralconfiguration.dbmigrations.api.dto package.
+ * com.gogidix.centralconfiguration.dbmigrations.api.dto package.
  *
- * <p>This package contains components for the
-com.gogidix.centralconfiguration.dbmigrations.api.dto module
+ * <p>This package contains components for the com.gogidix.centralconfiguration.dbmigrations.api.dto module
  * within the Gogidix ecosystem.</p>
  *
  * @since 1.0.0

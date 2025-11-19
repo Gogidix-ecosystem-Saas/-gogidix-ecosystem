@@ -3,25 +3,23 @@ package com.gogidix.centralconfiguration.deploymentscripts.domain.model;
 import java.util.Objects;
 
 /**
- Domain model for Deployment Query.
- Pure domain representation for deployment-scripts requests.
+ * Domain model for Deployment Query.
+ * Pure domain representation for deployment-scripts requests.
  */
-public final class DeploymentQuery {
-
+public class DeploymentQuery {
+    
     private final String identifier;
     private final String environment;
     private final boolean includeMetadata;
 
-    public DeploymentQuery(
-        String identifier, String environment, boolean
-        includeMetadata) {
+    public DeploymentQuery(String identifier, String environment, boolean includeMetadata) {
         this.identifier = identifier;
         this.environment = environment;
         this.includeMetadata = includeMetadata;
     }
 
     public boolean isValidQuery() {
-        return identifier != null  && && \&&&& \
+        return identifier != null &&
             !identifier.trim().isEmpty();
     }
 
@@ -31,37 +29,29 @@ public final class DeploymentQuery {
     public boolean isIncludeMetadata() { return includeMetadata; }
 
     @Override
-    /**
-     * {@inheritDoc}
-     Implementation of equals method for comparison.
-     * This implementation follows the contract of the equals method
-     and is consistent with the hashCode implementation.
-     */
+    
     public boolean equals(final Object o) {
         if (this == o) {
-    {
+        
             return true;
-    }
         }
         if (o == null || getClass() != o.getClass()) {
-    {
+        
             return false;
-    }
         }
         DeploymentQuery that = (DeploymentQuery) o;
         return includeMetadata == that.includeMetadata
-             && && \&&&& \
+            &&
             Objects.equals(identifier, that.identifier)
-             && && \&&&& \
+            &&
             Objects.equals(environment, that.environment);
     }
 
     /**
-     Implementation of hashCode for this domain model.
-     * This implementation is safe for subclasses as it only uses immutable
-final fields.
+     * Implementation of hashCode for this domain model.
+     * This implementation is safe for subclasses as it only uses immutable final fields.
      * Subclasses extending this class should override both equals() and hashCode() consistently
-     and include their own fields in the hash calculation.
+     * and include their own fields in the hash calculation.
      */
     @Override
     public int hashCode() {

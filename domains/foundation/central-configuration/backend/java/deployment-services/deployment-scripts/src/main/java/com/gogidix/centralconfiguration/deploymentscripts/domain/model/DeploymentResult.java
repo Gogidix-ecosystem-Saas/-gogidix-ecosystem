@@ -5,20 +5,18 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- Domain model for Deployment Result.
- Pure domain representation of deployment-scripts response.
+ * Domain model for Deployment Result.
+ * Pure domain representation of deployment-scripts response.
  */
-public final class DeploymentResult {
-
+public class DeploymentResult {
+    
     private final String identifier;
     private final String environment;
     private final Map<String, Object> data;
     private final LocalDateTime timestamp;
     private final String status;
 
-    public DeploymentResult(
-        String identifier, String environment, Map<String, Object>
-        data, String status) {
+    public DeploymentResult(String identifier, String environment, Map<String, Object> data, String status) {
         this.identifier = identifier;
         this.environment = environment;
         this.data = data;
@@ -27,7 +25,7 @@ public final class DeploymentResult {
     }
 
     public boolean hasData() {
-        return data != null  && && \&&&& \
+        return data != null &&
             !data.isEmpty();
     }
 
@@ -39,23 +37,15 @@ public final class DeploymentResult {
     public String getStatus() { return status; }
 
     @Override
-    /**
-     * {@inheritDoc}
-     Implementation of equals method for comparison.
-     * This implementation follows the contract of the equals method
-     and is consistent with the hashCode implementation.
-     */
+    
     public boolean equals(final Object o) {
         if (this == o) {
-    {
+        
         return true;
     }
-    }
         if (o == null || getClass() != o.getClass()) return false;
-    {
         DeploymentResult that = (DeploymentResult) o;
-    }
-        return Objects.equals(identifier, that.identifier)  && && \&&&& \
+        return Objects.equals(identifier, that.identifier) &&
                Objects.equals(environment, that.environment);
     }
 
