@@ -51,18 +51,17 @@ jobs:
           echo "Found services:"
           echo "$services"
 
-      # Code Quality - Optional (skipped for now to focus on deployment)
-      # - name: Code Quality - Checkstyle
-      #   run: |
-      #     echo "Running Checkstyle for all central-configuration services..."
-      #     find domains/foundation/central-configuration -name "pom.xml" -exec dirname {} \; | while read service; do
-      #       if [ -f "$service/pom.xml" ]; then
-      #         echo "Checking style for $service"
-      #         cd "$service"
-      #         mvn checkstyle:check -q || echo "Checkstyle issues found in $service"
-      #         cd - > /dev/null
-      #       fi
-      #     done
+      - name: Code Quality - Checkstyle
+        run: |
+          echo "Running Checkstyle for all central-configuration services..."
+          find domains/foundation/central-configuration -name "pom.xml" -exec dirname {} \; | while read service; do
+            if [ -f "$service/pom.xml" ]; then
+              echo "Checking style for $service"
+              cd "$service"
+              mvn checkstyle:check -q || echo "Checkstyle issues found in $service"
+              cd - > /dev/null
+            fi
+          done
 
       - name: Build All Java Services
         run: |
