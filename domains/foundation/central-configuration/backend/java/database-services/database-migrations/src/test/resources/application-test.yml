@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: database-migrations-test
+
+server:
+  port: 0
+
+eureka:
+  client:
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      enabled: true
+
+logging:
+  level:
+    root: WARN
+    com.gogidix: INFO
