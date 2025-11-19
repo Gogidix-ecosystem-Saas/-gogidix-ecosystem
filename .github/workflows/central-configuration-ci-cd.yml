@@ -44,10 +44,12 @@ jobs:
       - name: List All Services
         id: list-services
         run: |
-          services=$(find domains/foundation/central-configuration -name "pom.xml" | sed 's|/pom.xml||g' | sed 's|domains/foundation/central-configuration/||g')
-          echo "services=$services" >> $GITHUB_OUTPUT
+          services=$(find domains/foundation/central-configuration -name "pom.xml" | sed 's|/pom.xml||g' | sed 's|domains/foundation/central-configuration/||g' | tr '\n' ' ')
+          echo "services<<EOF" >> $GITHUB_OUTPUT
+          echo "$services" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
           echo "Found services:"
-          echo "$services" | tr ' ' '\n'
+          echo "$services"
 
       - name: Code Quality - Checkstyle
         run: |
