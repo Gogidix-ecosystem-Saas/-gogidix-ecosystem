@@ -205,13 +205,7 @@ jobs:
           - deployment-services
           - feature-services
           - infrastructure-services
-          - monitoring-services
-          - notification-services
           - security-services
-          - api-gateway-config
-          - service-registry-config
-          - config-server
-          - logging-config
 
     steps:
       - name: Checkout Code
@@ -283,7 +277,7 @@ jobs:
       - name: Deploy to Staging
         run: |
           echo "Deploying central-configuration services to staging..."
-          echo "Total services to deploy: 12"
+          echo "Total services to deploy: 6"
 
           # Deploy each service
           services=(
@@ -292,13 +286,7 @@ jobs:
             "deployment-services"
             "feature-services"
             "infrastructure-services"
-            "monitoring-services"
-            "notification-services"
             "security-services"
-            "api-gateway-config"
-            "service-registry-config"
-            "config-server"
-            "logging-config"
           )
 
           for service in "${services[@]}"; do
