@@ -1,0 +1,164 @@
+package com.gogidix.centralconfiguration.dbmigrations.application.service.impl;
+
+import com.gogidix.centralconfiguration.dbmigrations.api.dto.MigrationRequest;
+import com.gogidix.centralconfiguration.dbmigrations.api.dto.MigrationResponse;
+import com.gogidix.centralconfiguration.dbmigrations.api.dto.MigrationStatusResponse;
+import com.gogidix.centralconfiguration.dbmigrations.application.service.MigrationService;
+import com.gogidix.centralconfiguration.dbmigrations.domain.model.MigrationStatus;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+/**
+ * Implementation of MigrationService.
+ */
+@Service
+@RequiredArgsConstructor
+@Slf4j
+@Transactional
+public class MigrationServiceImpl implements MigrationService {
+
+    @Override
+    public MigrationResponse executeMigration(MigrationRequest request) {
+        log.info("Executing migration for database: {}", request.getDatabaseName());
+        
+        String migrationId = UUID.randomUUID().toString();
+        LocalDateTime startTime = LocalDateTime.now();
+        
+        try {
+            // TODO: Implement actual migration logic using Flyway or Liquibase
+            // This is a placeholder implementation
+            
+            return MigrationResponse.builder()
+                    .migrationId(migrationId)
+                    .databaseName(request.getDatabaseName())
+                    .migrationType(request.getMigrationType())
+                    .fromVersion("1.0.0")
+                    .toVersion(request.getTargetVersion())
+                    .status(MigrationStatus.SUCCESS)
+                    .startTime(startTime)
+                    .endTime(LocalDateTime.now())
+                    .durationMs(1000L)
+                    .success(true)
+                    .appliedScripts(List.of("V1__Initial_schema.sql", "V2__Add_indexes.sql"))
+                    .requestedBy(request.getRequestedBy())
+                    .comment(request.getComment())
+                    .build();
+                    
+        } catch (Exception e) {
+            log.error("Migration failed for database: {}", request.getDatabaseName(), e);
+            return MigrationResponse.builder()
+                    .migrationId(migrationId)
+                    .databaseName(request.getDatabaseName())
+                    .migrationType(request.getMigrationType())
+                    .status(MigrationStatus.FAILED)
+                    .startTime(startTime)
+                    .endTime(LocalDateTime.now())
+                    .success(false)
+                    .errorMessage(e.getMessage())
+                    .requestedBy(request.getRequestedBy())
+                    .build();
+        }
+    }
+
+    @Override
+    public MigrationResponse dryRunMigration(MigrationRequest request) {
+        log.info("Performing dry run for database: {}", request.getDatabaseName());
+        
+        // TODO: Implement dry run logic
+        return MigrationResponse.builder()
+                .migrationId(UUID.randomUUID().toString())
+                .databaseName(request.getDatabaseName())
+                .migrationType("DRY_RUN")
+                .status(MigrationStatus.SUCCESS)
+                .success(true)
+                .appliedScripts(List.of("Would apply: V1__Initial_schema.sql"))
+                .requestedBy(request.getRequestedBy())
+                .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public MigrationStatusResponse getMigrationStatus(String databaseName) {
+        log.info("Getting migration status for database: {}", databaseName);
+        
+        // TODO: Implement actual status check
+        return MigrationStatusResponse.builder()
+                .databaseName(databaseName)
+                .currentVersion("1.0.0")
+                .latestAvailableVersion("1.2.0")
+                .status(MigrationStatus.SUCCESS)
+                .lastMigrationTime(LocalDateTime.now().minusHours(1))
+                .pendingMigrations(List.of("V1.1__Add_new_table.sql", "V1.2__Update_indexes.sql"))
+                .appliedMigrations(List.of("V1__Initial_schema.sql"))
+                .isHealthy(true)
+                .issues(new ArrayList<>())
+                .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<MigrationResponse> getMigrationHistory(String databaseName, Pageable pageable) {
+        log.info("Getting migration history for database: {}", databaseName);
+        
+        // TODO: Implement actual history retrieval from database
+        List<MigrationResponse> history = List.of(
+                MigrationResponse.builder()
+                        .migrationId(UUID.randomUUID().toString())
+                        .databaseName(databaseName)
+                        .migrationType("FORWARD")
+                        .fromVersion("0.9.0")
+                        .toVersion("1.0.0")
+                        .status(MigrationStatus.SUCCESS)
+                        .startTime(LocalDateTime.now().minusHours(2))
+                        .endTime(LocalDateTime.now().minusHours(2).plusMinutes(5))
+                        .success(true)
+                        .requestedBy("system")
+                        .build()
+        );
+        
+        return new PageImpl<>(history, pageable, history.size());
+    }
+
+    @Override
+    public MigrationResponse rollbackMigration(MigrationRequest request) {
+        log.info("Rolling back migration for database: {} to version: {}", 
+                request.getDatabaseName(), request.getTargetVersion());
+        
+        // TODO: Implement rollback logic
+        return MigrationResponse.builder()
+                .migrationId(UUID.randomUUID().toString())
+                .databaseName(request.getDatabaseName())
+                .migrationType("ROLLBACK")
+                .fromVersion("1.2.0")
+                .toVersion(request.getTargetVersion())
+                .status(MigrationStatus.SUCCESS)
+                .success(true)
+                .requestedBy(request.getRequestedBy())
+                .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public MigrationStatusResponse validateMigration(String databaseName) {
+        log.info("Validating migration for database: {}", databaseName);
+        
+        // TODO: Implement validation logic
+        return MigrationStatusResponse.builder()
+                .databaseName(databaseName)
+                .currentVersion("1.0.0")
+                .status(MigrationStatus.SUCCESS)
+                .isHealthy(true)
+                .issues(new ArrayList<>())
+                .build();
+    }
+}

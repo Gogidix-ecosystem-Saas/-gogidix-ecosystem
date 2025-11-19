@@ -1,0 +1,154 @@
+package com.gogidix.centralconfiguration.environmentconfig.infrastructure.repository;
+
+import com.gogidix.centralconfiguration.environmentconfig.domain.model.EnvironmentConfiguration;
+import com.gogidix.centralconfiguration.environmentconfig.domain.port.EnvironmentPort;
+import org.springframework.stereotype.Repository;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+
+/**
+ * Infrastructure repository for Environment Configuration data.
+ * Implements data access for environment configuration storage.
+ */
+@Repository
+public class EnvironmentRepository implements EnvironmentPort {
+    
+    private final Map<String, EnvironmentConfiguration> environmentCache = new ConcurrentHashMap<>();
+    
+    @Override
+    public Optional<EnvironmentConfiguration> findByEnvironmentAndApplication(String environment, String application) {
+        String key = generateKey(environment, application);
+        
+        // Create default if not exists
+        if (!environmentCache.containsKey(key)) {
+            EnvironmentConfiguration defaultConfig = createDefaultConfiguration(environment, application);
+            environmentCache.put(key, defaultConfig);
+        }
+        
+        return Optional.ofNullable(environmentCache.get(key));
+    }
+    
+    @Override
+    public List<EnvironmentConfiguration> findByEnvironment(String environment) {
+        return environmentCache.values().stream()
+                .filter(config -> environment.equals(config.getEnvironment()))
+                .collect(Collectors.toList());
+    }
+    
+    @Override
+    public List<EnvironmentConfiguration> findByApplication(String application) {
+        return environmentCache.values().stream()
+                .filter(config -> application.equals(config.getApplication()))
+                .collect(Collectors.toList());
+    }
+    
+    @Override
+    public List<EnvironmentConfiguration> findActiveConfigurations() {
+        return environmentCache.values().stream()
+                .filter(EnvironmentConfiguration::isActive)
+                .collect(Collectors.toList());
+    }
+    
+    @Override
+    public void save(EnvironmentConfiguration configuration) {
+        if (configuration.isValidConfiguration()) {
+            String key = generateKey(configuration.getEnvironment(), configuration.getApplication());
+            environmentCache.put(key, configuration);
+        } else {
+            throw new IllegalArgumentException("Invalid environment configuration");
+        }
+    }
+    
+    @Override
+    public void delete(String environment, String application) {
+        String key = generateKey(environment, application);
+        environmentCache.remove(key);
+    }
+    
+    @Override
+    public List<String> getAllEnvironments() {
+        return environmentCache.values().stream()
+                .map(EnvironmentConfiguration::getEnvironment)
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+    }
+    
+    @Override
+    public List<String> getAllApplications() {
+        return environmentCache.values().stream()
+                .map(EnvironmentConfiguration::getApplication)
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+    }
+    
+    @Override
+    public boolean exists(String environment, String application) {
+        String key = generateKey(environment, application);
+        return environmentCache.containsKey(key);
+    }
+    
+    @Override
+    public void activateEnvironment(String environment, String application) {
+        Optional<EnvironmentConfiguration> configOpt = findByEnvironmentAndApplication(environment, application);
+        configOpt.ifPresent(config -> {
+            config.activate();
+            save(config);
+        });
+    }
+    
+    @Override
+    public void deactivateEnvironment(String environment, String application) {
+        Optional<EnvironmentConfiguration> configOpt = findByEnvironmentAndApplication(environment, application);
+        configOpt.ifPresent(config -> {
+            config.deactivate();
+            save(config);
+        });
+    }
+    
+    private String generateKey(String environment, String application) {
+        return environment + ":" + application;
+    }
+    
+    private EnvironmentConfiguration createDefaultConfiguration(String environment, String application) {
+        Map<String, Object> defaultVars = new HashMap<>();
+        defaultVars.put("spring.application.name", application);
+        defaultVars.put("environment.name", environment);
+        defaultVars.put("management.endpoints.web.exposure.include", "health,info");
+        defaultVars.put("eureka.client.serviceUrl.defaultZone", "http://localhost:8761/eureka/");
+        defaultVars.put("eureka.instance.preferIpAddress", "true");
+        
+        // Environment-specific configurations
+        switch (environment.toLowerCase()) {
+            case "development":
+            case "dev":
+                defaultVars.put("logging.level.root", "DEBUG");
+                defaultVars.put("spring.jpa.show-sql", "true");
+                defaultVars.put("server.port", "8080");
+                break;
+            case "staging":
+            case "stage":
+                defaultVars.put("logging.level.root", "INFO");
+                defaultVars.put("spring.jpa.show-sql", "false");
+                defaultVars.put("server.port", "8080");
+                break;
+            case "production":
+            case "prod":
+                defaultVars.put("logging.level.root", "WARN");
+                defaultVars.put("spring.jpa.show-sql", "false");
+                defaultVars.put("server.port", "8080");
+                break;
+            default:
+                defaultVars.put("logging.level.root", "INFO");
+                defaultVars.put("server.port", "8080");
+        }
+        
+        EnvironmentConfiguration config = new EnvironmentConfiguration(environment, application, defaultVars);
+        config.setProfile("default");
+        config.setDescription("Default configuration for " + environment + " environment");
+        return config;
+    }
+}
