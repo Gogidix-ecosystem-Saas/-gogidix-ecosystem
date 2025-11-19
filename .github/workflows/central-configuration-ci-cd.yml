@@ -102,13 +102,13 @@ jobs:
         run: |
           echo "Generating test reports..."
           mkdir -p test-reports
-          find domains/foundation/central-configuration -name "surefire-reports" -type d | while reportdir; do
+          find domains/foundation/central-configuration -name "surefire-reports" -type d | while read reportdir; do
             cp -r "$reportdir"/* test-reports/ 2>/dev/null || true
           done
 
       - name: Upload Test Results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-reports
           path: test-reports/
@@ -182,7 +182,7 @@ jobs:
           done
 
       - name: Upload JAR Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: central-config-jars
           path: |
