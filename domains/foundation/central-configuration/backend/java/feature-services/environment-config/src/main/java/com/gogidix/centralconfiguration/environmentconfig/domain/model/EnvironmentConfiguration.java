@@ -41,8 +41,10 @@ public class EnvironmentConfiguration {
     
     // Business logic methods
     public boolean isValidConfiguration() {
-        return environment != null && !environment.trim().isEmpty() &&
-               application != null && !application.trim().isEmpty() &&
+        return environment != null &&
+            !environment.trim().isEmpty() &&
+               application != null &&
+            !application.trim().isEmpty() &&
                variables != null;
     }
     
@@ -169,8 +171,10 @@ public class EnvironmentConfiguration {
     }
     
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
+    public boolean equals(final Object o) {
+        if (this == o) {
+        return true;
+    }
         if (o == null || getClass() != o.getClass()) return false;
         EnvironmentConfiguration that = (EnvironmentConfiguration) o;
         return Objects.equals(id, that.id) &&

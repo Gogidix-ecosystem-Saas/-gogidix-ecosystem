@@ -36,8 +36,10 @@ public class ConfigurationId {
     }
     
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
+    public boolean equals(final Object o) {
+        if (this == o) {
+        return true;
+    }
         if (o == null || getClass() != o.getClass()) return false;
         ConfigurationId that = (ConfigurationId) o;
         return Objects.equals(value, that.value);

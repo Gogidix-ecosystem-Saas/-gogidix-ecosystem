@@ -28,7 +28,8 @@ public class EnvironmentResult {
     }
 
     public boolean hasConfigurations() {
-        return configurations != null && !configurations.isEmpty();
+        return configurations != null &&
+            !configurations.isEmpty();
     }
 
     public int getConfigurationCount() {
@@ -44,8 +45,10 @@ public class EnvironmentResult {
     public boolean isHasSecrets() { return hasSecrets; }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
+    public boolean equals(final Object o) {
+        if (this == o) {
+        return true;
+    }
         if (o == null || getClass() != o.getClass()) return false;
         EnvironmentResult that = (EnvironmentResult) o;
         return Objects.equals(environment, that.environment) &&

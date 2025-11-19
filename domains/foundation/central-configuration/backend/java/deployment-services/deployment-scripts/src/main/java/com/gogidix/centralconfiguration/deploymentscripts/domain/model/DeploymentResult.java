@@ -25,7 +25,8 @@ public class DeploymentResult {
     }
 
     public boolean hasData() {
-        return data != null && !data.isEmpty();
+        return data != null &&
+            !data.isEmpty();
     }
 
     // Getters
@@ -36,8 +37,10 @@ public class DeploymentResult {
     public String getStatus() { return status; }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
+    public boolean equals(final Object o) {
+        if (this == o) {
+        return true;
+    }
         if (o == null || getClass() != o.getClass()) return false;
         DeploymentResult that = (DeploymentResult) o;
         return Objects.equals(identifier, that.identifier) &&

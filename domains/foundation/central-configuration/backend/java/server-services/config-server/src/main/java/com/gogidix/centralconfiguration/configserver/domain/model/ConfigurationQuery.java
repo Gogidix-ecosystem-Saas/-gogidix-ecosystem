@@ -27,8 +27,10 @@ public class ConfigurationQuery {
 
     // Business logic methods
     public boolean isValidQuery() {
-        return application != null && !application.trim().isEmpty() &&
-               profile != null && !profile.trim().isEmpty();
+        return application != null &&
+            !application.trim().isEmpty() &&
+               profile != null &&
+            !profile.trim().isEmpty();
     }
 
     public String getConfigurationKey() {
@@ -57,8 +59,10 @@ public class ConfigurationQuery {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
+    public boolean equals(final Object o) {
+        if (this == o) {
+        return true;
+    }
         if (o == null || getClass() != o.getClass()) return false;
         ConfigurationQuery that = (ConfigurationQuery) o;
         return includeDefaults == that.includeDefaults &&

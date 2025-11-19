@@ -37,9 +37,12 @@ public class ConfigurationData {
 
     // Business logic methods
     public boolean isValidConfiguration() {
-        return application != null && !application.trim().isEmpty() &&
-               profile != null && !profile.trim().isEmpty() &&
-               properties != null && !properties.isEmpty();
+        return application != null &&
+            !application.trim().isEmpty() &&
+               profile != null &&
+            !profile.trim().isEmpty() &&
+               properties != null &&
+            !properties.isEmpty();
     }
 
     public void updateProperties(Map<String, Object> newProperties) {
@@ -119,8 +122,10 @@ public class ConfigurationData {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
+    public boolean equals(final Object o) {
+        if (this == o) {
+        return true;
+    }
         if (o == null || getClass() != o.getClass()) return false;
         ConfigurationData that = (ConfigurationData) o;
         return Objects.equals(id, that.id) &&

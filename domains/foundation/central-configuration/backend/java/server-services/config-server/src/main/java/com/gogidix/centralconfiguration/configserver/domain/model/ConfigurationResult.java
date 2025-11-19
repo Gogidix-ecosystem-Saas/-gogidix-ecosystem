@@ -33,11 +33,13 @@ public class ConfigurationResult {
 
     // Business logic methods
     public boolean hasProperties() {
-        return properties != null && !properties.isEmpty();
+        return properties != null &&
+            !properties.isEmpty();
     }
 
     public boolean isComplete() {
-        return application != null && profile != null && properties != null;
+        return application != null &&
+            profile != null && properties != null;
     }
 
     public int getPropertyCount() {
@@ -74,8 +76,10 @@ public class ConfigurationResult {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
+    public boolean equals(final Object o) {
+        if (this == o) {
+        return true;
+    }
         if (o == null || getClass() != o.getClass()) return false;
         ConfigurationResult that = (ConfigurationResult) o;
         return Objects.equals(application, that.application) &&

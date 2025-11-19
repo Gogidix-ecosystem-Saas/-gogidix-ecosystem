@@ -343,15 +343,19 @@ public class SecretClean {
         }
         
         // Security validations
-        if (securityClassification == SecurityClassification.TOP_SECRET && !requiresMFA) {
+        if (securityClassification == SecurityClassification.TOP_SECRET &&
+            !requiresMFA) {
             throw new IllegalStateException("Top secret classifications must require MFA");
         }
         
-        if (isRevoked && status == SecretStatus.ACTIVE) {
+        if (isRevoked &&
+            status == SecretStatus.ACTIVE) {
             throw new IllegalStateException("Revoked secrets cannot be active");
         }
         
-        if (expiresAt != null && expiresAt.isBefore(LocalDateTime.now()) && status == SecretStatus.ACTIVE) {
+        if (expiresAt != null &&
+            expiresAt.isBefore(LocalDateTime.now()) &&
+            status == SecretStatus.ACTIVE) {
             throw new IllegalStateException("Expired secrets cannot be active");
         }
     }
@@ -377,7 +381,8 @@ public class SecretClean {
             case AUTHORIZED_ONLY:
                 return isAuthorized(userId, serviceId, userRoles);
             case STRICT:
-                return isAuthorized(userId, serviceId, userRoles) && 
+                return isAuthorized(userId, serviceId, userRoles) &&
+            
                        (requiresApproval ? isApproved() : true);
             default:
                 return false;
@@ -388,11 +393,13 @@ public class SecretClean {
      * Checks if the user/service is authorized.
      */
     private boolean isAuthorized(String userId, String serviceId, Set<String> userRoles) {
-        if (userId != null && authorizedUsers.contains(userId)) {
+        if (userId != null &&
+            authorizedUsers.contains(userId)) {
             return true;
         }
         
-        if (serviceId != null && authorizedServices.contains(serviceId)) {
+        if (serviceId != null &&
+            authorizedServices.contains(serviceId)) {
             return true;
         }
         
@@ -411,14 +418,16 @@ public class SecretClean {
      * Checks if the secret is approved for use.
      */
     public boolean isApproved() {
-        return !requiresApproval || (approvedBy.size() > 0 && approvedAt != null);
+        return !requiresApproval || (approvedBy.size() > 0 &&
+            approvedAt != null);
     }
     
     /**
      * Checks if the secret has expired.
      */
     public boolean isExpired() {
-        return expiresAt != null && LocalDateTime.now().isAfter(expiresAt);
+        return expiresAt != null &&
+            LocalDateTime.now().isAfter(expiresAt);
     }
     
     /**
@@ -429,7 +438,8 @@ public class SecretClean {
             return false;
         }
         
-        return nextRotationAt != null && LocalDateTime.now().isAfter(nextRotationAt);
+        return nextRotationAt != null &&
+            LocalDateTime.now().isAfter(nextRotationAt);
     }
     
     /**
@@ -641,7 +651,8 @@ public class SecretClean {
         if (stringValue.matches("^[0-9a-fA-F]+$")) {
             return SecretFormat.HEX;
         }
-        if (stringValue.contains("BEGIN") && stringValue.contains("END")) {
+        if (stringValue.contains("BEGIN") &&
+            stringValue.contains("END")) {
             return SecretFormat.PEM;
         }
         return SecretFormat.TEXT;
@@ -741,11 +752,14 @@ public class SecretClean {
     public String getDocumentation() { return documentation; }
     
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
+    public boolean equals(final Object o) {
+        if (this == o) {
+        return true;
+    }
         if (!(o instanceof SecretClean)) return false;
         SecretClean that = (SecretClean) o;
-        return Objects.equals(id, that.id) && Objects.equals(secretId, that.secretId);
+        return Objects.equals(id, that.id) &&
+            Objects.equals(secretId, that.secretId);
     }
     
     @Override

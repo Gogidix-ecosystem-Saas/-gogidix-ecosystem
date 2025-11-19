@@ -21,8 +21,10 @@ public class EnvironmentQuery {
     }
 
     public boolean isValidQuery() {
-        return environment != null && !environment.trim().isEmpty() &&
-               application != null && !application.trim().isEmpty();
+        return environment != null &&
+            !environment.trim().isEmpty() &&
+               application != null &&
+            !application.trim().isEmpty();
     }
 
     public String getConfigurationKey() {
@@ -36,8 +38,10 @@ public class EnvironmentQuery {
     public boolean isIncludeSecrets() { return includeSecrets; }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
+    public boolean equals(final Object o) {
+        if (this == o) {
+        return true;
+    }
         if (o == null || getClass() != o.getClass()) return false;
         EnvironmentQuery that = (EnvironmentQuery) o;
         return includeSecrets == that.includeSecrets &&

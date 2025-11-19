@@ -25,7 +25,8 @@ public class RegionalResult {
     }
 
     public boolean hasData() {
-        return data != null && !data.isEmpty();
+        return data != null &&
+            !data.isEmpty();
     }
 
     // Getters
@@ -36,14 +37,25 @@ public class RegionalResult {
     public String getStatus() { return status; }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         RegionalResult that = (RegionalResult) o;
-        return Objects.equals(identifier, that.identifier) &&
-               Objects.equals(environment, that.environment);
+        return Objects.equals(identifier, that.identifier)
+            &&
+            Objects.equals(environment, that.environment);
     }
 
+    /**
+     * Implementation of hashCode for this domain model.
+     * This implementation is safe for subclasses as it only uses immutable final fields.
+     * Subclasses extending this class should override both equals() and hashCode() consistently
+     * and include their own fields in the hash calculation.
+     */
     @Override
     public int hashCode() {
         return Objects.hash(identifier, environment);

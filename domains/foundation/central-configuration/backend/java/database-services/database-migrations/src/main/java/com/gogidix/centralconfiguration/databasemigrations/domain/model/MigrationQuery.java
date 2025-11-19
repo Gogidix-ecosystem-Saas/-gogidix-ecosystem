@@ -19,7 +19,8 @@ public class MigrationQuery {
     }
 
     public boolean isValidQuery() {
-        return identifier != null && !identifier.trim().isEmpty();
+        return identifier != null &&
+            !identifier.trim().isEmpty();
     }
 
     // Getters
@@ -28,8 +29,10 @@ public class MigrationQuery {
     public boolean isIncludeMetadata() { return includeMetadata; }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
+    public boolean equals(final Object o) {
+        if (this == o) {
+        return true;
+    }
         if (o == null || getClass() != o.getClass()) return false;
         MigrationQuery that = (MigrationQuery) o;
         return includeMetadata == that.includeMetadata &&
