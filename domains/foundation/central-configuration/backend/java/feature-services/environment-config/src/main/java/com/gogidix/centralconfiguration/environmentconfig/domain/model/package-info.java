@@ -1,7 +1,8 @@
 /**
- * com.gogidix.centralconfiguration.environmentconfig.domain.model package.
+ com.gogidix.centralconfiguration.environmentconfig.domain.model package.
  *
- * <p>This package contains components for the com.gogidix.centralconfiguration.environmentconfig.domain.model module
+ * <p>This package contains components for the
+com.gogidix.centralconfiguration.environmentconfig.domain.model module
  * within the Gogidix ecosystem.</p>
  *
  * @since 1.0.0

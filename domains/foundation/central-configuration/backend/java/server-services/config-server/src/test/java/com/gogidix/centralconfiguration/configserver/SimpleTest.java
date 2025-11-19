@@ -15,8 +15,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
     }
 )
 @ActiveProfiles("test")
-public class SimpleTest {
-    
+public final class SimpleTest {
+
     @Test
     public void contextLoads() {
         assertTrue(true, "Application context loaded successfully");

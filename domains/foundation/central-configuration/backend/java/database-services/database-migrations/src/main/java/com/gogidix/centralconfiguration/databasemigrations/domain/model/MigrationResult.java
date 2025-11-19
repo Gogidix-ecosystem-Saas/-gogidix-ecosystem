@@ -5,18 +5,20 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Domain model for Migration Result.
- * Pure domain representation of database-migrations response.
+ Domain model for Migration Result.
+ Pure domain representation of database-migrations response.
  */
-public class MigrationResult {
-    
+public final class MigrationResult {
+
     private final String identifier;
     private final String environment;
     private final Map<String, Object> data;
     private final LocalDateTime timestamp;
     private final String status;
 
-    public MigrationResult(String identifier, String environment, Map<String, Object> data, String status) {
+    public MigrationResult(
+        String identifier, String environment, Map<String, Object>
+        data, String status) {
         this.identifier = identifier;
         this.environment = environment;
         this.data = data;
@@ -25,7 +27,7 @@ public class MigrationResult {
     }
 
     public boolean hasData() {
-        return data != null &&
+        return data != null  && && \&&&& \
             !data.isEmpty();
     }
 
@@ -37,13 +39,23 @@ public class MigrationResult {
     public String getStatus() { return status; }
 
     @Override
+    /**
+     * {@inheritDoc}
+     Implementation of equals method for comparison.
+     * This implementation follows the contract of the equals method
+     and is consistent with the hashCode implementation.
+     */
     public boolean equals(final Object o) {
         if (this == o) {
+    {
         return true;
     }
+    }
         if (o == null || getClass() != o.getClass()) return false;
+    {
         MigrationResult that = (MigrationResult) o;
-        return Objects.equals(identifier, that.identifier) &&
+    }
+        return Objects.equals(identifier, that.identifier)  && && \&&&& \
                Objects.equals(environment, that.environment);
     }
 

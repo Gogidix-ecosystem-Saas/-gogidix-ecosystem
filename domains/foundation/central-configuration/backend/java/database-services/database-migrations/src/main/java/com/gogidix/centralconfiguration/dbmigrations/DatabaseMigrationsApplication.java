@@ -5,14 +5,20 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
 /**
- * Database Migrations Application.
- * This service manages database schema migrations across the ecosystem.
+ Database Migrations Application.
+ This service manages database schema migrations across the ecosystem.
  */
 @SpringBootApplication
+@SuppressWarnings("HideUtilityClassConstructor")
 @EnableDiscoveryClient
-public class DatabaseMigrationsApplication {
+public final class DatabaseMigrationsApplication {
 
-    public static void main(String[] args) {
+    /**
+     Main method for the application.
+     *
+     * @param args command line arguments
+     */
+    public static void main(final String[] args) {
         SpringApplication.run(DatabaseMigrationsApplication.class, args);
     }
 }

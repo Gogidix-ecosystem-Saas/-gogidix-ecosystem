@@ -13,11 +13,12 @@ import org.springframework.test.context.ActiveProfiles;
     }
 )
 @ActiveProfiles("test")
-public class ApplicationTest {
+public final class ApplicationTest {
 
     @Test
     public void contextLoads() {
         // Test passes if Spring context loads successfully
-        System.out.println("✅ kubernetes-manifests context loaded successfully");
+        System.out.println(
+        "✅ kubernetes-manifests context loaded successfully");
     }
 }

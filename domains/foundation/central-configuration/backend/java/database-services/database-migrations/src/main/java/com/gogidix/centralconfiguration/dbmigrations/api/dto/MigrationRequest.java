@@ -11,13 +11,13 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * DTO for migration requests.
+ DTO for migration requests.
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class MigrationRequest {
+public final class MigrationRequest {
 
     @NotBlank(message = "Database name is required")
     private String databaseName;

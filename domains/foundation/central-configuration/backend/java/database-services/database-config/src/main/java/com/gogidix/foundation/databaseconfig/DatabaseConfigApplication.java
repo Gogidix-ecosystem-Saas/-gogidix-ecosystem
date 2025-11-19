@@ -9,10 +9,16 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
  * Provides database configuration management for GOGIDIX Ecosystem
  */
 @SpringBootApplication
+@SuppressWarnings("HideUtilityClassConstructor")
 @EnableDiscoveryClient
-public class DatabaseConfigApplication {
+public final class DatabaseConfigApplication {
 
-    public static void main(String[] args) {
+    /**
+     Main method for the application.
+     *
+     * @param args command line arguments
+     */
+    public static void main(final String[] args) {
         SpringApplication.run(DatabaseConfigApplication.class, args);
     }
 }

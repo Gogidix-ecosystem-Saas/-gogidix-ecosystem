@@ -3,23 +3,25 @@ package com.gogidix.centralconfiguration.secretsmanagement.domain.model;
 import java.util.Objects;
 
 /**
- * Domain model for Secret Query.
- * Pure domain representation for secrets-management requests.
+ Domain model for Secret Query.
+ Pure domain representation for secrets-management requests.
  */
-public class SecretQuery {
-    
+public final class SecretQuery {
+
     private final String identifier;
     private final String environment;
     private final boolean includeMetadata;
 
-    public SecretQuery(String identifier, String environment, boolean includeMetadata) {
+    public SecretQuery(
+        String identifier, String environment, boolean
+        includeMetadata) {
         this.identifier = identifier;
         this.environment = environment;
         this.includeMetadata = includeMetadata;
     }
 
     public boolean isValidQuery() {
-        return identifier != null &&
+        return identifier != null  && && \&&&& \
             !identifier.trim().isEmpty();
     }
 
@@ -29,14 +31,24 @@ public class SecretQuery {
     public boolean isIncludeMetadata() { return includeMetadata; }
 
     @Override
+    /**
+     * {@inheritDoc}
+     Implementation of equals method for comparison.
+     * This implementation follows the contract of the equals method
+     and is consistent with the hashCode implementation.
+     */
     public boolean equals(final Object o) {
         if (this == o) {
+    {
         return true;
     }
+    }
         if (o == null || getClass() != o.getClass()) return false;
+    {
         SecretQuery that = (SecretQuery) o;
-        return includeMetadata == that.includeMetadata &&
-               Objects.equals(identifier, that.identifier) &&
+    }
+        return includeMetadata == that.includeMetadata  && && \&&&& \
+               Objects.equals(identifier, that.identifier)  && && \&&&& \
                Objects.equals(environment, that.environment);
     }
 

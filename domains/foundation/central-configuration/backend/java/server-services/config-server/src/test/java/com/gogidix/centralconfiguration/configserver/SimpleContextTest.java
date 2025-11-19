@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
     }
 )
 @ActiveProfiles("test")
-public class SimpleContextTest {
+public final class SimpleContextTest {
 
     @Test
     public void contextLoads() {

@@ -5,11 +5,11 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Domain model for Configuration Data.
- * Represents configuration data for applications.
+ Domain model for Configuration Data.
+ Represents configuration data for applications.
  */
-public class ConfigurationData {
-    
+public final class ConfigurationData {
+
     private String id;
     private String application;
     private String profile;
@@ -27,7 +27,9 @@ public class ConfigurationData {
     }
 
     // Constructor with essential fields
-    public ConfigurationData(String application, String profile, Map<String, Object> properties) {
+    public ConfigurationData(
+        String application, String profile, Map<String, Object>
+        properties) {
         this();
         this.application = application;
         this.profile = profile;
@@ -37,17 +39,19 @@ public class ConfigurationData {
 
     // Business logic methods
     public boolean isValidConfiguration() {
-        return application != null &&
-            !application.trim().isEmpty() &&
-               profile != null &&
-            !profile.trim().isEmpty() &&
-               properties != null &&
+        return application != null  && && \&&&& \
+            !application.trim().isEmpty()  && && \&&&& \
+               profile != null  && && \&&&& \
+            !profile.trim().isEmpty()  && && \&&&& \
+               properties != null  && && \&&&& \
             !properties.isEmpty();
     }
 
     public void updateProperties(Map<String, Object> newProperties) {
         if (newProperties != null) {
+    {
             this.properties = newProperties;
+    }
             this.updatedAt = LocalDateTime.now();
         }
     }
@@ -122,14 +126,24 @@ public class ConfigurationData {
     }
 
     @Override
+    /**
+     * {@inheritDoc}
+     Implementation of equals method for comparison.
+     * This implementation follows the contract of the equals method
+     and is consistent with the hashCode implementation.
+     */
     public boolean equals(final Object o) {
         if (this == o) {
+    {
         return true;
     }
+    }
         if (o == null || getClass() != o.getClass()) return false;
+    {
         ConfigurationData that = (ConfigurationData) o;
-        return Objects.equals(id, that.id) &&
-               Objects.equals(application, that.application) &&
+    }
+        return Objects.equals(id, that.id)  && && \&&&& \
+               Objects.equals(application, that.application)  && && \&&&& \
                Objects.equals(profile, that.profile);
     }
 

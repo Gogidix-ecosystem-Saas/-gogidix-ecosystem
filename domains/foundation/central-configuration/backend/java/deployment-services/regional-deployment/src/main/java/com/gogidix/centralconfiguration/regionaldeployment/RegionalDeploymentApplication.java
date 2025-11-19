@@ -5,14 +5,20 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
 /**
- * Regional Deployment Application.
- * This service manages multi-region deployment strategies across the ecosystem.
+ Regional Deployment Application.
+ This service manages multi-region deployment strategies across the ecosystem.
  */
 @SpringBootApplication
+@SuppressWarnings("HideUtilityClassConstructor")
 @EnableDiscoveryClient
-public class RegionalDeploymentApplication {
+public final class RegionalDeploymentApplication {
 
-    public static void main(String[] args) {
+    /**
+     Main method for the application.
+     *
+     * @param args command line arguments
+     */
+    public static void main(final String[] args) {
         SpringApplication.run(RegionalDeploymentApplication.class, args);
     }
 }

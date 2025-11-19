@@ -5,14 +5,21 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
 /**
- * Disaster Recovery Application.
- * This service manages backup, recovery, and business continuity across the ecosystem.
+ Disaster Recovery Application.
+ * This service manages backup, recovery, and business continuity across the
+ecosystem.
  */
 @SpringBootApplication
+@SuppressWarnings("HideUtilityClassConstructor")
 @EnableDiscoveryClient
-public class DisasterRecoveryApplication {
+public final class DisasterRecoveryApplication {
 
-    public static void main(String[] args) {
+    /**
+     Main method for the application.
+     *
+     * @param args command line arguments
+     */
+    public static void main(final String[] args) {
         SpringApplication.run(DisasterRecoveryApplication.class, args);
     }
 }

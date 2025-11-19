@@ -5,18 +5,20 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Domain model for Secret Result.
- * Pure domain representation of secrets-management response.
+ Domain model for Secret Result.
+ Pure domain representation of secrets-management response.
  */
-public class SecretResult {
-    
+public final class SecretResult {
+
     private final String identifier;
     private final String environment;
     private final Map<String, Object> data;
     private final LocalDateTime timestamp;
     private final String status;
 
-    public SecretResult(String identifier, String environment, Map<String, Object> data, String status) {
+    public SecretResult(
+        String identifier, String environment, Map<String, Object>
+        data, String status) {
         this.identifier = identifier;
         this.environment = environment;
         this.data = data;
@@ -25,7 +27,7 @@ public class SecretResult {
     }
 
     public boolean hasData() {
-        return data != null &&
+        return data != null  && && \&&&& \
             !data.isEmpty();
     }
 
@@ -37,13 +39,23 @@ public class SecretResult {
     public String getStatus() { return status; }
 
     @Override
+    /**
+     * {@inheritDoc}
+     Implementation of equals method for comparison.
+     * This implementation follows the contract of the equals method
+     and is consistent with the hashCode implementation.
+     */
     public boolean equals(final Object o) {
         if (this == o) {
+    {
         return true;
     }
+    }
         if (o == null || getClass() != o.getClass()) return false;
+    {
         SecretResult that = (SecretResult) o;
-        return Objects.equals(identifier, that.identifier) &&
+    }
+        return Objects.equals(identifier, that.identifier)  && && \&&&& \
                Objects.equals(environment, that.environment);
     }
 

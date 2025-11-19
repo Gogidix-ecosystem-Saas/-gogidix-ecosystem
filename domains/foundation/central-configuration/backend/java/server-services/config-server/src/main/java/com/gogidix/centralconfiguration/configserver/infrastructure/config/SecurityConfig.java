@@ -3,17 +3,19 @@ package com.gogidix.centralconfiguration.configserver.infrastructure.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import
+    org.springframework.security.config.annotation.web.configuration.EnableWebSecu
+    rity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.config.Customizer;
 
 /**
- * Security configuration for the Config Server.
- * This configures security settings for the Configuration Server.
+ Security configuration for the Config Server.
+ This configures security settings for the Configuration Server.
  */
 @Configuration
 @EnableWebSecurity
-public class SecurityConfig {
+public final class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -23,7 +25,7 @@ public class SecurityConfig {
                 .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                 .anyRequest().authenticated())
             .httpBasic(Customizer.withDefaults());
-        
+
         return http.build();
     }
 }

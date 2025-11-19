@@ -5,22 +5,26 @@ import jakarta.validation.constraints.Size;
 import java.util.Map;
 
 /**
- * Request DTO for configuration queries.
- * Contains parameters for configuration retrieval.
+ Request DTO for configuration queries.
+ Contains parameters for configuration retrieval.
  */
-public class ConfigurationRequest {
-    
+public final class ConfigurationRequest {
+
     @NotBlank(message = "Application name is required")
-    @Size(min = 2, max = 50, message = "Application name must be between 2 and 50 characters")
+    @Size(
+        min = 2, max = 50, message = "Application name must be
+        between 2 and 50 characters")
     private String application;
-    
+
     @NotBlank(message = "Profile is required")
-    @Size(min = 2, max = 30, message = "Profile must be between 2 and 30 characters")
+    @Size(
+        min = 2, max = 30, message = "Profile must be between 2 and
+        30 characters")
     private String profile;
-    
+
     @Size(max = 50, message = "Label must not exceed 50 characters")
     private String label;
-    
+
     private boolean includeDefaults;
     private Map<String, Object> properties;
 
@@ -76,11 +80,11 @@ public class ConfigurationRequest {
     public void setIncludeDefaults(boolean includeDefaults) {
         this.includeDefaults = includeDefaults;
     }
-    
+
     public Map<String, Object> getProperties() {
         return properties;
     }
-    
+
     public void setProperties(Map<String, Object> properties) {
         this.properties = properties;
     }

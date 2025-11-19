@@ -13,7 +13,7 @@ import org.springframework.test.context.ActiveProfiles;
     }
 )
 @ActiveProfiles("test")
-public class ApplicationTest {
+public final class ApplicationTest {
 
     @Test
     public void contextLoads() {

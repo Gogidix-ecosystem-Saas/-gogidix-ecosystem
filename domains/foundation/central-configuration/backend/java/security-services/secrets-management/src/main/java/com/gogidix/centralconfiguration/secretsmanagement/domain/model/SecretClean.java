@@ -12,10 +12,11 @@ import java.util.Base64;
 
 /**
  * Clean Domain Model for Secret Management - ZERO CONTAMINATION
- * 
- * Enterprise-grade secret management with comprehensive security and business logic.
- * Implements hexagonal architecture principles with zero external dependencies.
- * 
+ *
+ * Enterprise-grade secret management with comprehensive security and
+business logic.
+ Implements hexagonal architecture principles with zero external dependencies.
+ *
  * Key Features:
  * - Multiple encryption algorithms (AES-256, RSA, etc.)
  * - Key rotation and versioning
@@ -27,12 +28,12 @@ import java.util.Base64;
  * - Emergency secret revocation
  * - Secret integrity verification
  * - Backup and disaster recovery
- * 
+ *
  * @version 2.0.0
  * @since 2024-01-01
  */
-public class SecretClean {
-    
+public final class SecretClean {
+
     // Core Identity
     private final UUID id;
     private final String secretId;
@@ -42,7 +43,7 @@ public class SecretClean {
     private final SecretVersion version;
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
-    
+
     // Secret Data
     private final byte[] encryptedValue;
     private final String encryptionAlgorithm;
@@ -50,7 +51,7 @@ public class SecretClean {
     private final String checksum;
     private final Integer valueLength;
     private final SecretFormat format;
-    
+
     // Access Control
     private final String ownerId;
     private final String ownerType;
@@ -61,7 +62,7 @@ public class SecretClean {
     private final Set<String> authorizedServices;
     private final Set<String> authorizedRoles;
     private final AccessPolicy accessPolicy;
-    
+
     // Lifecycle Management
     private final SecretStatus status;
     private final LocalDateTime expiresAt;
@@ -70,21 +71,21 @@ public class SecretClean {
     private final Duration rotationInterval;
     private final LocalDateTime lastRotatedAt;
     private final LocalDateTime nextRotationAt;
-    
+
     // Versioning
     private final String previousVersionId;
     private final Integer versionNumber;
     private final Boolean isCurrentVersion;
     private final Set<String> deprecatedVersions;
     private final VersioningStrategy versioningStrategy;
-    
+
     // Usage Tracking
     private final Integer accessCount;
     private final LocalDateTime lastAccessedAt;
     private final String lastAccessedBy;
     private final Set<String> accessHistory;
     private final Map<String, Integer> serviceAccessCounts;
-    
+
     // Security Features
     private final Boolean requiresMFA;
     private final Boolean requiresApproval;
@@ -94,14 +95,14 @@ public class SecretClean {
     private final Boolean isRevoked;
     private final LocalDateTime revokedAt;
     private final String revocationReason;
-    
+
     // Sharing and Distribution
     private final SharingPolicy sharingPolicy;
     private final Set<SecretShare> activeShares;
     private final DistributionStrategy distributionStrategy;
     private final Set<String> distributionTargets;
     private final SyncStatus syncStatus;
-    
+
     // Compliance and Audit
     private final ComplianceLevel complianceLevel;
     private final Set<String> complianceStandards;
@@ -109,38 +110,43 @@ public class SecretClean {
     private final Map<String, String> auditMetadata;
     private final RetentionPolicy retentionPolicy;
     private final DataClassification dataClassification;
-    
+
     // Backup and Recovery
     private final BackupStrategy backupStrategy;
     private final String backupLocation;
     private final LocalDateTime lastBackupAt;
     private final RecoveryLevel recoveryLevel;
     private final Boolean hasBackup;
-    
+
     // Environment Context
     private final Set<String> environments;
     private final Set<String> applications;
     private final Set<String> services;
     private final DeploymentContext deploymentContext;
-    
+
     // Metadata
     private final Set<String> tags;
     private final Map<String, String> labels;
     private final Map<String, Object> customMetadata;
     private final String contactEmail;
     private final String documentation;
-    
+
     // Constructor for new secret creation
-    public SecretClean(String secretId, String name, SecretType secretType, byte[] value, 
-                      String ownerId, String tenantId, SecurityClassification securityClassification) {
+    public SecretClean(
+        String secretId, String name, SecretType secretType, byte[]
+        value,
+                      String ownerId, String tenantId, SecurityClassification
+securityClassification) {
         this.id = UUID.randomUUID();
         this.secretId = Objects.requireNonNull(secretId, "Secret ID cannot be null");
         this.name = Objects.requireNonNull(name, "Secret name cannot be null");
         this.secretType = Objects.requireNonNull(secretType, "Secret type cannot be null");
         this.ownerId = Objects.requireNonNull(ownerId, "Owner ID cannot be null");
         this.tenantId = Objects.requireNonNull(tenantId, "Tenant ID cannot be null");
-        this.securityClassification = Objects.requireNonNull(securityClassification, "Security classification cannot be null");
-        
+        this.securityClassification = Objects.requireNonNull(
+        securityClassification, "Security classification cannot be
+        null");
+
         // Encrypt the value
         this.encryptionAlgorithm = "AES-256-GCM";
         this.encryptionKeyId = generateEncryptionKeyId();
@@ -148,7 +154,7 @@ public class SecretClean {
         this.checksum = calculateChecksum(value);
         this.valueLength = value.length;
         this.format = detectFormat(value);
-        
+
         // Set defaults
         this.description = null;
         this.version = new SecretVersion(1, 0);
@@ -210,37 +216,61 @@ public class SecretClean {
         this.customMetadata = new HashMap<>();
         this.contactEmail = null;
         this.documentation = null;
-        
+
         validateBusinessRules();
     }
-    
+
     // Full constructor for complete control
-    public SecretClean(UUID id, String secretId, String name, String description, SecretType secretType,
-                      SecretVersion version, LocalDateTime createdAt, LocalDateTime updatedAt,
-                      byte[] encryptedValue, String encryptionAlgorithm, String encryptionKeyId,
-                      String checksum, Integer valueLength, SecretFormat format, String ownerId,
+    public SecretClean(
+        UUID id, String secretId, String name, String description,
+        SecretType secretType,
+                      SecretVersion version, LocalDateTime createdAt,
+LocalDateTime updatedAt,
+                      byte[] encryptedValue, String encryptionAlgorithm,
+String encryptionKeyId,
+                      String checksum, Integer valueLength, SecretFormat
+format, String ownerId,
                       String ownerType, String tenantId, String organizationId,
-                      SecurityClassification securityClassification, Set<String> authorizedUsers,
-                      Set<String> authorizedServices, Set<String> authorizedRoles, AccessPolicy accessPolicy,
-                      SecretStatus status, LocalDateTime expiresAt, Duration maxAge, Boolean autoRotate,
-                      Duration rotationInterval, LocalDateTime lastRotatedAt, LocalDateTime nextRotationAt,
-                      String previousVersionId, Integer versionNumber, Boolean isCurrentVersion,
-                      Set<String> deprecatedVersions, VersioningStrategy versioningStrategy,
-                      Integer accessCount, LocalDateTime lastAccessedAt, String lastAccessedBy,
-                      Set<String> accessHistory, Map<String, Integer> serviceAccessCounts,
-                      Boolean requiresMFA, Boolean requiresApproval, Set<String> approvedBy,
-                      LocalDateTime approvedAt, String emergencyRevocationCode, Boolean isRevoked,
-                      LocalDateTime revokedAt, String revocationReason, SharingPolicy sharingPolicy,
-                      Set<SecretShare> activeShares, DistributionStrategy distributionStrategy,
-                      Set<String> distributionTargets, SyncStatus syncStatus, ComplianceLevel complianceLevel,
-                      Set<String> complianceStandards, Boolean requiresAudit, Map<String, String> auditMetadata,
-                      RetentionPolicy retentionPolicy, DataClassification dataClassification,
-                      BackupStrategy backupStrategy, String backupLocation, LocalDateTime lastBackupAt,
-                      RecoveryLevel recoveryLevel, Boolean hasBackup, Set<String> environments,
-                      Set<String> applications, Set<String> services, DeploymentContext deploymentContext,
-                      Set<String> tags, Map<String, String> labels, Map<String, Object> customMetadata,
+                      SecurityClassification securityClassification,
+Set<String> authorizedUsers,
+                      Set<String> authorizedServices, Set<String>
+authorizedRoles, AccessPolicy accessPolicy,
+                      SecretStatus status, LocalDateTime expiresAt, Duration
+maxAge, Boolean autoRotate,
+                      Duration rotationInterval, LocalDateTime lastRotatedAt,
+LocalDateTime nextRotationAt,
+                      String previousVersionId, Integer versionNumber,
+Boolean isCurrentVersion,
+                      Set<String> deprecatedVersions, VersioningStrategy
+versioningStrategy,
+                      Integer accessCount, LocalDateTime lastAccessedAt,
+String lastAccessedBy,
+                      Set<String> accessHistory, Map<String, Integer>
+serviceAccessCounts,
+                      Boolean requiresMFA, Boolean requiresApproval,
+Set<String> approvedBy,
+                      LocalDateTime approvedAt, String
+emergencyRevocationCode, Boolean isRevoked,
+                      LocalDateTime revokedAt, String revocationReason,
+SharingPolicy sharingPolicy,
+                      Set<SecretShare> activeShares, DistributionStrategy
+distributionStrategy,
+                      Set<String> distributionTargets, SyncStatus syncStatus,
+ComplianceLevel complianceLevel,
+                      Set<String> complianceStandards, Boolean requiresAudit,
+Map<String, String> auditMetadata,
+                      RetentionPolicy retentionPolicy, DataClassification
+dataClassification,
+                      BackupStrategy backupStrategy, String backupLocation,
+LocalDateTime lastBackupAt,
+                      RecoveryLevel recoveryLevel, Boolean hasBackup,
+Set<String> environments,
+                      Set<String> applications, Set<String> services,
+DeploymentContext deploymentContext,
+                      Set<String> tags, Map<String, String> labels,
+Map<String, Object> customMetadata,
                       String contactEmail, String documentation) {
-        
+
         this.id = id;
         this.secretId = secretId;
         this.name = name;
@@ -314,64 +344,85 @@ public class SecretClean {
         this.customMetadata = customMetadata != null ? new HashMap<>(customMetadata) : new HashMap<>();
         this.contactEmail = contactEmail;
         this.documentation = documentation;
-        
+
         validateBusinessRules();
     }
-    
+
     /**
-     * Validates all business rules for the secret.
+     Validates all business rules for the secret.
      */
     private void validateBusinessRules() {
         if (secretId == null || secretId.trim().isEmpty()) {
+    {
             throw new IllegalArgumentException("Secret ID cannot be null or empty");
+    }
         }
-        
+
         if (name == null || name.trim().isEmpty()) {
+    {
             throw new IllegalArgumentException("Secret name cannot be null or empty");
+    }
         }
-        
+
         if (encryptedValue == null || encryptedValue.length == 0) {
+    {
             throw new IllegalArgumentException("Secret value cannot be null or empty");
+    }
         }
-        
+
         if (ownerId == null || ownerId.trim().isEmpty()) {
+    {
             throw new IllegalArgumentException("Owner ID cannot be null or empty");
+    }
         }
-        
+
         if (tenantId == null || tenantId.trim().isEmpty()) {
+    {
             throw new IllegalArgumentException("Tenant ID cannot be null or empty");
+    }
         }
-        
+
         // Security validations
-        if (securityClassification == SecurityClassification.TOP_SECRET &&
+        if (securityClassification == SecurityClassification.TOP_SECRET  && && \&&&& \
+    {
             !requiresMFA) {
+    }
             throw new IllegalStateException("Top secret classifications must require MFA");
         }
-        
-        if (isRevoked &&
+
+        if (isRevoked  && && \&&&& \
+    {
             status == SecretStatus.ACTIVE) {
+    }
             throw new IllegalStateException("Revoked secrets cannot be active");
         }
-        
-        if (expiresAt != null &&
-            expiresAt.isBefore(LocalDateTime.now()) &&
+
+        if (expiresAt != null  && && \&&&& \
+    {
+            expiresAt.isBefore(LocalDateTime.now())  && && \&&&& \
+    }
             status == SecretStatus.ACTIVE) {
             throw new IllegalStateException("Expired secrets cannot be active");
         }
     }
-    
+
     /**
-     * Checks if the secret is accessible by the given user/service.
+     Checks if the secret is accessible by the given user/service.
      */
-    public boolean isAccessibleBy(String userId, String serviceId, Set<String> userRoles) {
+    public boolean isAccessibleBy(
+        String userId, String serviceId, Set<String> userRoles) {
         if (isRevoked || status != SecretStatus.ACTIVE) {
+    {
             return false;
+    }
         }
-        
+
         if (isExpired()) {
+    {
             return false;
+    }
         }
-        
+
         // Check access policy
         switch (accessPolicy) {
             case OPEN:
@@ -381,181 +432,234 @@ public class SecretClean {
             case AUTHORIZED_ONLY:
                 return isAuthorized(userId, serviceId, userRoles);
             case STRICT:
-                return isAuthorized(userId, serviceId, userRoles) &&
-            
+                return isAuthorized(userId, serviceId, userRoles)  && && \&&&& \
+
                        (requiresApproval ? isApproved() : true);
             default:
                 return false;
         }
     }
-    
+
     /**
-     * Checks if the user/service is authorized.
+     Checks if the user/service is authorized.
      */
-    private boolean isAuthorized(String userId, String serviceId, Set<String> userRoles) {
-        if (userId != null &&
+    private boolean isAuthorized(
+        String userId, String serviceId, Set<String> userRoles) {
+        if (userId != null  && && \&&&& \
+    {
             authorizedUsers.contains(userId)) {
+    }
             return true;
         }
-        
-        if (serviceId != null &&
+
+        if (serviceId != null  && && \&&&& \
+    {
             authorizedServices.contains(serviceId)) {
+    }
             return true;
         }
-        
+
         if (userRoles != null) {
+    {
             for (String role : userRoles) {
+    }
                 if (authorizedRoles.contains(role)) {
+    {
                     return true;
+    }
                 }
             }
         }
-        
+
         return false;
     }
-    
+
     /**
-     * Checks if the secret is approved for use.
+     Checks if the secret is approved for use.
      */
     public boolean isApproved() {
-        return !requiresApproval || (approvedBy.size() > 0 &&
+        return !requiresApproval || (approvedBy.size() > 0  && && \&&&& \
             approvedAt != null);
     }
-    
+
     /**
-     * Checks if the secret has expired.
+     Checks if the secret has expired.
      */
     public boolean isExpired() {
-        return expiresAt != null &&
+        return expiresAt != null  && && \&&&& \
             LocalDateTime.now().isAfter(expiresAt);
     }
-    
+
     /**
-     * Checks if the secret needs rotation.
+     Checks if the secret needs rotation.
      */
     public boolean needsRotation() {
         if (!autoRotate) {
+    {
             return false;
+    }
         }
-        
-        return nextRotationAt != null &&
+
+        return nextRotationAt != null  && && \&&&& \
             LocalDateTime.now().isAfter(nextRotationAt);
     }
-    
+
     /**
-     * Decrypts the secret value (simplified implementation).
+     Decrypts the secret value (simplified implementation).
      */
     public byte[] decryptValue() {
         if (isRevoked) {
+    {
             throw new SecurityException("Cannot decrypt revoked secret");
+    }
         }
-        
+
         // In real implementation, this would use proper key management
         return decryptWithKey(encryptedValue, encryptionKeyId);
     }
-    
+
     /**
-     * Records access to this secret.
+     Records access to this secret.
      */
     public SecretClean recordAccess(String accessedBy) {
         Set<String> newAccessHistory = new HashSet<>(accessHistory);
         newAccessHistory.add(accessedBy + ":" + LocalDateTime.now());
-        
+
         Map<String, Integer> newServiceCounts = new HashMap<>(serviceAccessCounts);
         newServiceCounts.merge(accessedBy, 1, Integer::sum);
-        
+
         return new SecretClean(
             id, secretId, name, description, secretType, version, createdAt, LocalDateTime.now(),
-            encryptedValue, encryptionAlgorithm, encryptionKeyId, checksum, valueLength, format,
-            ownerId, ownerType, tenantId, organizationId, securityClassification,
-            authorizedUsers, authorizedServices, authorizedRoles, accessPolicy, status,
-            expiresAt, maxAge, autoRotate, rotationInterval, lastRotatedAt, nextRotationAt,
-            previousVersionId, versionNumber, isCurrentVersion, deprecatedVersions, versioningStrategy,
+            encryptedValue, encryptionAlgorithm, encryptionKeyId, checksum,
+valueLength, format,
+            ownerId, ownerType, tenantId, organizationId,
+securityClassification,
+            authorizedUsers, authorizedServices, authorizedRoles,
+accessPolicy, status,
+            expiresAt, maxAge, autoRotate, rotationInterval, lastRotatedAt,
+nextRotationAt,
+            previousVersionId, versionNumber, isCurrentVersion,
+deprecatedVersions, versioningStrategy,
             accessCount + 1, LocalDateTime.now(), accessedBy, newAccessHistory, newServiceCounts,
-            requiresMFA, requiresApproval, approvedBy, approvedAt, emergencyRevocationCode,
+            requiresMFA, requiresApproval, approvedBy, approvedAt,
+emergencyRevocationCode,
             isRevoked, revokedAt, revocationReason, sharingPolicy, activeShares,
-            distributionStrategy, distributionTargets, syncStatus, complianceLevel,
-            complianceStandards, requiresAudit, auditMetadata, retentionPolicy, dataClassification,
-            backupStrategy, backupLocation, lastBackupAt, recoveryLevel, hasBackup,
-            environments, applications, services, deploymentContext, tags, labels,
+            distributionStrategy, distributionTargets, syncStatus,
+complianceLevel,
+            complianceStandards, requiresAudit, auditMetadata,
+retentionPolicy, dataClassification,
+            backupStrategy, backupLocation, lastBackupAt, recoveryLevel,
+hasBackup,
+            environments, applications, services, deploymentContext, tags,
+labels,
             customMetadata, contactEmail, documentation
         );
     }
-    
+
     /**
-     * Rotates the secret with a new value.
+     Rotates the secret with a new value.
      */
     public SecretClean rotate(byte[] newValue, String rotatedBy) {
         if (!autoRotate) {
+    {
             throw new IllegalStateException("Secret rotation is disabled");
+    }
         }
-        
+
         SecretVersion newVersion = version.increment();
         byte[] newEncryptedValue = encryptValue(newValue);
         String newChecksum = calculateChecksum(newValue);
         LocalDateTime now = LocalDateTime.now();
-        
+
         return new SecretClean(
-            UUID.randomUUID(), secretId, name, description, secretType, newVersion, createdAt, now,
+            UUID.randomUUID(
+        ), secretId, name, description, secretType, newVersion,
+        createdAt, now,
             newEncryptedValue, encryptionAlgorithm, generateEncryptionKeyId(), newChecksum,
-            newValue.length, detectFormat(newValue), ownerId, ownerType, tenantId, organizationId,
-            securityClassification, authorizedUsers, authorizedServices, authorizedRoles, accessPolicy,
-            SecretStatus.ACTIVE, now.plus(maxAge), maxAge, autoRotate, rotationInterval, now,
+            newValue.length, detectFormat(
+        newValue), ownerId, ownerType, tenantId, organizationId,
+            securityClassification, authorizedUsers, authorizedServices,
+authorizedRoles, accessPolicy,
+            SecretStatus.ACTIVE, now.plus(
+        maxAge), maxAge, autoRotate, rotationInterval, now,
             calculateNextRotation(), this.id.toString(), versionNumber + 1, true,
             deprecatedVersions, versioningStrategy, 0, null, null, new HashSet<>(),
             new HashMap<>(), requiresMFA, requiresApproval, new HashSet<>(), null,
             generateRevocationCode(), false, null, null, sharingPolicy, new HashSet<>(),
-            distributionStrategy, distributionTargets, SyncStatus.PENDING_SYNC, complianceLevel,
-            complianceStandards, requiresAudit, auditMetadata, retentionPolicy, dataClassification,
-            backupStrategy, backupLocation, null, recoveryLevel, false, environments,
-            applications, services, deploymentContext, tags, labels, customMetadata,
+            distributionStrategy, distributionTargets,
+SyncStatus.PENDING_SYNC, complianceLevel,
+            complianceStandards, requiresAudit, auditMetadata,
+retentionPolicy, dataClassification,
+            backupStrategy, backupLocation, null, recoveryLevel, false,
+environments,
+            applications, services, deploymentContext, tags, labels,
+customMetadata,
             contactEmail, documentation
         );
     }
-    
+
     /**
-     * Revokes the secret immediately.
+     Revokes the secret immediately.
      */
     public SecretClean revoke(String reason, String revokedBy) {
         if (isRevoked) {
+    {
             throw new IllegalStateException("Secret is already revoked");
+    }
         }
-        
+
         Map<String, String> newAuditMetadata = new HashMap<>(auditMetadata);
         newAuditMetadata.put("revoked_by", revokedBy);
         newAuditMetadata.put("revocation_reason", reason);
         newAuditMetadata.put("revoked_at", LocalDateTime.now().toString());
-        
+
         return new SecretClean(
             id, secretId, name, description, secretType, version, createdAt, LocalDateTime.now(),
-            encryptedValue, encryptionAlgorithm, encryptionKeyId, checksum, valueLength, format,
-            ownerId, ownerType, tenantId, organizationId, securityClassification,
-            authorizedUsers, authorizedServices, authorizedRoles, accessPolicy, SecretStatus.REVOKED,
-            expiresAt, maxAge, autoRotate, rotationInterval, lastRotatedAt, nextRotationAt,
-            previousVersionId, versionNumber, isCurrentVersion, deprecatedVersions, versioningStrategy,
-            accessCount, lastAccessedAt, lastAccessedBy, accessHistory, serviceAccessCounts,
-            requiresMFA, requiresApproval, approvedBy, approvedAt, emergencyRevocationCode,
+            encryptedValue, encryptionAlgorithm, encryptionKeyId, checksum,
+valueLength, format,
+            ownerId, ownerType, tenantId, organizationId,
+securityClassification,
+            authorizedUsers, authorizedServices, authorizedRoles,
+accessPolicy, SecretStatus.REVOKED,
+            expiresAt, maxAge, autoRotate, rotationInterval, lastRotatedAt,
+nextRotationAt,
+            previousVersionId, versionNumber, isCurrentVersion,
+deprecatedVersions, versioningStrategy,
+            accessCount, lastAccessedAt, lastAccessedBy, accessHistory,
+serviceAccessCounts,
+            requiresMFA, requiresApproval, approvedBy, approvedAt,
+emergencyRevocationCode,
             true, LocalDateTime.now(), reason, sharingPolicy, new HashSet<>(),
-            distributionStrategy, distributionTargets, syncStatus, complianceLevel,
-            complianceStandards, requiresAudit, newAuditMetadata, retentionPolicy, dataClassification,
-            backupStrategy, backupLocation, lastBackupAt, recoveryLevel, hasBackup,
-            environments, applications, services, deploymentContext, tags, labels,
+            distributionStrategy, distributionTargets, syncStatus,
+complianceLevel,
+            complianceStandards, requiresAudit, newAuditMetadata,
+retentionPolicy, dataClassification,
+            backupStrategy, backupLocation, lastBackupAt, recoveryLevel,
+hasBackup,
+            environments, applications, services, deploymentContext, tags,
+labels,
             customMetadata, contactEmail, documentation
         );
     }
-    
+
     /**
-     * Creates a time-limited share of this secret.
+     Creates a time-limited share of this secret.
      */
-    public SecretShare createShare(String shareWith, Duration validFor, Set<String> permissions) {
+    public SecretShare createShare(
+        String shareWith, Duration validFor, Set<String>
+        permissions) {
         if (sharingPolicy == SharingPolicy.NO_SHARING) {
+    {
             throw new IllegalStateException("Secret sharing is disabled");
+    }
         }
-        
+
         if (isRevoked || status != SecretStatus.ACTIVE) {
+    {
             throw new IllegalStateException("Cannot share inactive or revoked secret");
+    }
         }
-        
+
         return new SecretShare(
             UUID.randomUUID().toString(),
             secretId,
@@ -566,118 +670,139 @@ public class SecretClean {
             ShareStatus.ACTIVE
         );
     }
-    
+
     /**
-     * Calculates the security score of this secret (0-100).
+     Calculates the security score of this secret (0-100).
      */
     public int calculateSecurityScore() {
         int score = 0;
-        
+
         // Base score from security classification
         score += securityClassification.getBaseScore();
-        
+
         // Encryption strength
         if ("AES-256-GCM".equals(encryptionAlgorithm)) score += 20;
         else if (encryptionAlgorithm.contains("AES-256")) score += 15;
         else if (encryptionAlgorithm.contains("AES")) score += 10;
-        
+
+    {
         // Access controls
+    }
         if (requiresMFA) score += 15;
         if (requiresApproval) score += 10;
         if (accessPolicy == AccessPolicy.STRICT) score += 10;
         else if (accessPolicy == AccessPolicy.AUTHORIZED_ONLY) score += 5;
-        
+
+    {
         // Lifecycle management
+    }
         if (autoRotate) score += 10;
         if (hasBackup) score += 5;
         if (!isExpired()) score += 5;
-        
+
+    {
         // Compliance
+    }
         if (requiresAudit) score += 5;
         if (complianceLevel == ComplianceLevel.STRICT) score += 10;
-        
+
+    {
         // Deductions
+    }
         if (isRevoked) score = 0;
         if (isExpired()) score -= 30;
         if (needsRotation()) score -= 20;
-        
+
+    {
         return Math.max(0, Math.min(100, score));
     }
-    
+    }
+
     // Private helper methods
-    
+
     private byte[] encryptValue(byte[] value) {
-        // Simplified encryption - in real implementation would use proper crypto
+        // Simplified encryption - in real implementation would use proper
+crypto
         try {
             KeyGenerator keyGen = KeyGenerator.getInstance("AES");
             keyGen.init(256);
             SecretKey secretKey = keyGen.generateKey();
-            
+
             Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
             cipher.init(Cipher.ENCRYPT_MODE, secretKey);
-            
+
             return cipher.doFinal(value);
         } catch (Exception e) {
             throw new RuntimeException("Failed to encrypt secret value", e);
         }
     }
-    
+
     private byte[] decryptWithKey(byte[] encryptedValue, String keyId) {
-        // Simplified decryption - in real implementation would retrieve key from key store
+        // Simplified decryption - in real implementation would retrieve key
+from key store
         try {
-            // This is a placeholder - real implementation would use proper key management
+            // This is a placeholder - real implementation would use proper
+key management
             byte[] keyBytes = Base64.getDecoder().decode("SGVsbG8gV29ybGQhSGVsbG8gV29ybGQh"); // 32 bytes
             SecretKey secretKey = new SecretKeySpec(keyBytes, "AES");
-            
+
             Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
             cipher.init(Cipher.DECRYPT_MODE, secretKey);
-            
+
             return cipher.doFinal(encryptedValue);
         } catch (Exception e) {
             throw new RuntimeException("Failed to decrypt secret value", e);
         }
     }
-    
+
     private String calculateChecksum(byte[] value) {
         // Simplified checksum - in real implementation would use SHA-256
         return Base64.getEncoder().encodeToString(value).substring(0, 16);
     }
-    
+
     private SecretFormat detectFormat(byte[] value) {
         String stringValue = new String(value);
         if (stringValue.matches("^[A-Za-z0-9+/]*={0,2}$")) {
+    {
             return SecretFormat.BASE64;
+    }
         }
         if (stringValue.matches("^[0-9a-fA-F]+$")) {
+    {
             return SecretFormat.HEX;
+    }
         }
-        if (stringValue.contains("BEGIN") &&
+        if (stringValue.contains("BEGIN")  && && \&&&& \
+    {
             stringValue.contains("END")) {
+    }
             return SecretFormat.PEM;
         }
         return SecretFormat.TEXT;
     }
-    
+
     private String generateEncryptionKeyId() {
         return "key-" + UUID.randomUUID().toString().substring(0, 8);
     }
-    
+
     private String generateRevocationCode() {
         SecureRandom random = new SecureRandom();
         byte[] bytes = new byte[16];
         random.nextBytes(bytes);
         return Base64.getEncoder().encodeToString(bytes);
     }
-    
+
     private LocalDateTime calculateNextRotation() {
         if (!autoRotate || rotationInterval == null) {
+    {
             return null;
+    }
         }
         return lastRotatedAt.plus(rotationInterval);
     }
-    
+
     // Getters for immutable access
-    
+
     public UUID getId() { return id; }
     public String getSecretId() { return secretId; }
     public String getName() { return name; }
@@ -750,26 +875,38 @@ public class SecretClean {
     public Map<String, Object> getCustomMetadata() { return new HashMap<>(customMetadata); }
     public String getContactEmail() { return contactEmail; }
     public String getDocumentation() { return documentation; }
-    
+
     @Override
+    /**
+     * {@inheritDoc}
+     Implementation of equals method for comparison.
+     * This implementation follows the contract of the equals method
+     and is consistent with the hashCode implementation.
+     */
     public boolean equals(final Object o) {
         if (this == o) {
+    {
         return true;
     }
+    }
         if (!(o instanceof SecretClean)) return false;
+    {
         SecretClean that = (SecretClean) o;
-        return Objects.equals(id, that.id) &&
+    }
+        return Objects.equals(id, that.id)  && && \&&&& \
             Objects.equals(secretId, that.secretId);
     }
-    
+
     @Override
     public int hashCode() {
         return Objects.hash(id, secretId);
     }
-    
+
     @Override
     public String toString() {
-        return String.format("Secret{id=%s, name='%s', type=%s, status=%s, securityScore=%d}",
+        return String.format(
+        "Secret{id=%s, name='%s', type=%s, status=%s,
+        securityScore=%d}",
                            id, name, secretType, status, calculateSecurityScore());
     }
 }
@@ -787,17 +924,19 @@ enum SecretType {
     ENCRYPTION_KEY(Duration.ofDays(365), true, Duration.ofDays(90)),
     WEBHOOK_SECRET(Duration.ofDays(180), false, Duration.ofDays(30)),
     GENERIC(Duration.ofDays(365), false, Duration.ofDays(90));
-    
+
     private final Duration defaultTTL;
     private final boolean shouldAutoRotate;
     private final Duration rotationInterval;
-    
-    SecretType(Duration defaultTTL, boolean shouldAutoRotate, Duration rotationInterval) {
+
+    SecretType(
+        Duration defaultTTL, boolean shouldAutoRotate, Duration
+        rotationInterval) {
         this.defaultTTL = defaultTTL;
         this.shouldAutoRotate = shouldAutoRotate;
         this.rotationInterval = rotationInterval;
     }
-    
+
     public Duration getDefaultTTL() { return defaultTTL; }
     public boolean shouldAutoRotate() { return shouldAutoRotate; }
     public Duration getRotationInterval() { return rotationInterval; }
@@ -808,20 +947,23 @@ enum SecurityClassification {
     INTERNAL(20, false, false, Set.of("SOC2")),
     CONFIDENTIAL(40, true, false, Set.of("SOC2", "ISO27001")),
     SECRET(60, true, true, Set.of("SOC2", "ISO27001", "FIPS140-2")),
-    TOP_SECRET(80, true, true, Set.of("SOC2", "ISO27001", "FIPS140-2", "COMMON_CRITERIA"));
-    
+    TOP_SECRET(80, true, true, Set.of(
+        "SOC2", "ISO27001", "FIPS140-2", "COMMON_CRITERIA"));
+
     private final int baseScore;
     private final boolean requiresMFA;
     private final boolean requiresApproval;
     private final Set<String> requiredStandards;
-    
-    SecurityClassification(int baseScore, boolean requiresMFA, boolean requiresApproval, Set<String> requiredStandards) {
+
+    SecurityClassification(
+        int baseScore, boolean requiresMFA, boolean
+        requiresApproval, Set<String> requiredStandards) {
         this.baseScore = baseScore;
         this.requiresMFA = requiresMFA;
         this.requiresApproval = requiresApproval;
         this.requiredStandards = requiredStandards;
     }
-    
+
     public int getBaseScore() { return baseScore; }
     public boolean requiresMFA() { return requiresMFA; }
     public boolean requiresApproval() { return requiresApproval; }
@@ -879,23 +1021,23 @@ enum ShareStatus {
 class SecretVersion {
     private final int major;
     private final int minor;
-    
+
     public SecretVersion(int major, int minor) {
         this.major = major;
         this.minor = minor;
     }
-    
+
     public SecretVersion increment() {
         return new SecretVersion(major, minor + 1);
     }
-    
+
     public SecretVersion incrementMajor() {
         return new SecretVersion(major + 1, 0);
     }
-    
+
     public int getMajor() { return major; }
     public int getMinor() { return minor; }
-    
+
     @Override
     public String toString() {
         return String.format("%d.%d", major, minor);
@@ -910,9 +1052,9 @@ class SecretShare {
     private final LocalDateTime expiresAt;
     private final Set<String> permissions;
     private final ShareStatus status;
-    
-    public SecretShare(String shareId, String secretId, String sharedWith, 
-                      LocalDateTime createdAt, LocalDateTime expiresAt, 
+
+    public SecretShare(String shareId, String secretId, String sharedWith,
+                      LocalDateTime createdAt, LocalDateTime expiresAt,
                       Set<String> permissions, ShareStatus status) {
         this.shareId = shareId;
         this.secretId = secretId;
@@ -922,11 +1064,11 @@ class SecretShare {
         this.permissions = permissions;
         this.status = status;
     }
-    
+
     public boolean isExpired() {
         return LocalDateTime.now().isAfter(expiresAt);
     }
-    
+
     public String getShareId() { return shareId; }
     public String getSecretId() { return secretId; }
     public String getSharedWith() { return sharedWith; }
@@ -940,13 +1082,14 @@ class DeploymentContext {
     private final String environment;
     private final String cluster;
     private final String namespace;
-    
-    public DeploymentContext(String environment, String cluster, String namespace) {
+
+    public DeploymentContext(
+        String environment, String cluster, String namespace) {
         this.environment = environment;
         this.cluster = cluster;
         this.namespace = namespace;
     }
-    
+
     public String getEnvironment() { return environment; }
     public String getCluster() { return cluster; }
     public String getNamespace() { return namespace; }
@@ -955,16 +1098,16 @@ class DeploymentContext {
 class RetentionPolicy {
     private final Duration retentionPeriod;
     private final boolean autoDelete;
-    
+
     public RetentionPolicy(Duration retentionPeriod, boolean autoDelete) {
         this.retentionPeriod = retentionPeriod;
         this.autoDelete = autoDelete;
     }
-    
+
     public static RetentionPolicy defaultPolicy() {
         return new RetentionPolicy(Duration.ofDays(2555), false); // 7 years, no auto-delete
     }
-    
+
     public Duration getRetentionPeriod() { return retentionPeriod; }
     public boolean isAutoDelete() { return autoDelete; }
 }

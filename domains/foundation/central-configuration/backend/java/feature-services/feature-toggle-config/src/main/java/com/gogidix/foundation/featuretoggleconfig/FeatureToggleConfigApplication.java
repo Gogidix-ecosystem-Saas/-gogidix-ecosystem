@@ -9,10 +9,16 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
  * Provides feature flag management for GOGIDIX Ecosystem
  */
 @SpringBootApplication
+@SuppressWarnings("HideUtilityClassConstructor")
 @EnableDiscoveryClient
-public class FeatureToggleConfigApplication {
+public final class FeatureToggleConfigApplication {
 
-    public static void main(String[] args) {
+    /**
+     Main method for the application.
+     *
+     * @param args command line arguments
+     */
+    public static void main(final String[] args) {
         SpringApplication.run(FeatureToggleConfigApplication.class, args);
     }
 }

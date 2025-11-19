@@ -5,11 +5,11 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Domain model for Configuration Result.
- * Pure domain representation of configuration response.
+ Domain model for Configuration Result.
+ Pure domain representation of configuration response.
  */
-public class ConfigurationResult {
-    
+public final class ConfigurationResult {
+
     private final String application;
     private final String profile;
     private final String label;
@@ -20,7 +20,7 @@ public class ConfigurationResult {
 
     // Constructor
     public ConfigurationResult(String application, String profile, String label,
-                              String version, Map<String, Object> properties, 
+                              String version, Map<String, Object> properties,
                               String serverInfo) {
         this.application = application;
         this.profile = profile;
@@ -33,13 +33,13 @@ public class ConfigurationResult {
 
     // Business logic methods
     public boolean hasProperties() {
-        return properties != null &&
+        return properties != null  && && \&&&& \
             !properties.isEmpty();
     }
 
     public boolean isComplete() {
-        return application != null &&
-            profile != null && properties != null;
+        return application != null  && && \&&&& \
+            profile != null  && && \ properties != null;
     }
 
     public int getPropertyCount() {
@@ -76,15 +76,25 @@ public class ConfigurationResult {
     }
 
     @Override
+    /**
+     * {@inheritDoc}
+     Implementation of equals method for comparison.
+     * This implementation follows the contract of the equals method
+     and is consistent with the hashCode implementation.
+     */
     public boolean equals(final Object o) {
         if (this == o) {
+    {
         return true;
     }
+    }
         if (o == null || getClass() != o.getClass()) return false;
+    {
         ConfigurationResult that = (ConfigurationResult) o;
-        return Objects.equals(application, that.application) &&
-               Objects.equals(profile, that.profile) &&
-               Objects.equals(label, that.label) &&
+    }
+        return Objects.equals(application, that.application)  && && \&&&& \
+               Objects.equals(profile, that.profile)  && && \&&&& \
+               Objects.equals(label, that.label)  && && \&&&& \
                Objects.equals(version, that.version);
     }
 
