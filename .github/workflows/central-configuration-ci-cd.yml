@@ -113,7 +113,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test-reports
-          path: test-reports/
+          path: |
+            test-reports/
+            domains/foundation/central-configuration/**/target/surefire-reports/
+            domains/foundation/central-configuration/**/target/failsafe-reports/
 
   # Security Scans (Optional - can be enabled later)
   # security-scan:
@@ -200,12 +203,14 @@ jobs:
     strategy:
       matrix:
         service:
-          - core-config-services
-          - database-services
-          - deployment-services
-          - feature-services
-          - infrastructure-services
-          - security-services
+          - database-services/database-config
+          - database-services/database-migrations
+          - deployment-services/deployment-scripts
+          - deployment-services/regional-deployment
+          - feature-services/environment-config
+          - feature-services/feature-toggle-config
+          - security-services/disaster-recovery
+          - security-services/secrets-management
 
     steps:
       - name: Checkout Code
@@ -221,16 +226,32 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
+      - name: Check if Dockerfile exists
+        id: check-dockerfile
+        run: |
+          if [ -f "domains/foundation/central-configuration/backend/java/${{ matrix.service }}/Dockerfile" ]; then
+            echo "dockerfile_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "dockerfile_exists=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Build and Push Docker Image
+        if: steps.check-dockerfile.outputs.dockerfile_exists == 'true'
         uses: docker/build-push-action@v5
         with:
           context: domains/foundation/central-configuration/backend/java/${{ matrix.service }}
+          file: domains/foundation/central-configuration/backend/java/${{ matrix.service }}/Dockerfile
           push: ${{ github.ref == 'refs/heads/main' }}
           tags: |
             ${{ env.IMAGE_NAMESPACE }}/central-config-${{ matrix.service }}:${{ github.sha }}
             ${{ env.IMAGE_NAMESPACE }}/central-config-${{ matrix.service }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Skip Docker Build
+        if: steps.check-dockerfile.outputs.dockerfile_exists == 'false'
+        run: |
+          echo "Skipping Docker build for ${{ matrix.service }} - no Dockerfile found"
 
   # Validate Deployment
   validate:

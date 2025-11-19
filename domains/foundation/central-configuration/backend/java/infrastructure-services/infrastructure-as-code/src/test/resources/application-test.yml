@@ -1,26 +1,19 @@
 spring:
-  application:
-    name: infrastructure-as-code-test
-
-server:
-  port: 0
-
-eureka:
-  client:
-    enabled: false
-    register-with-eureka: false
-    fetch-registry: false
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info
-  endpoint:
-    health:
+  profiles:
+    active: test
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: password
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+  h2:
+    console:
       enabled: true
-
 logging:
   level:
-    root: WARN
-    com.gogidix: INFO
+    com.gogidix: DEBUG
+    org.springframework: INFO
