@@ -1,43 +1,19 @@
-# Working test configuration for Config Server
 spring:
-  application:
-    name: config-server-test
-  cloud:
-    config:
-      server:
-        native:
-          search-locations: classpath:/config
-        health:
-          enabled: false
-        git:
-          uri: https://github.com/gogidix-technology/configuration-repo
-          clone-on-start: false
-          timeout: 5
-        encrypt:
-          enabled: false
-
-server:
-  port: 0
-
-eureka:
-  client:
-    enabled: false
-    register-with-eureka: false
-    fetch-registry: false
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info
-  endpoint:
-    health:
+  profiles:
+    active: test
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: password
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+  h2:
+    console:
       enabled: true
-      show-details: always
-  security:
-    enabled: false
-
 logging:
   level:
-    root: WARN
-    com.gogidix: INFO
+    com.gogidix: DEBUG
+    org.springframework: INFO
