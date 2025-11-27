@@ -600,3 +600,4 @@ jobs:
           echo "📢 Foundation Domain CI/CD Pipeline Completed"
           echo "Status: ${{ job.status }}"
           echo "View Details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+  workflow_dispatch:
